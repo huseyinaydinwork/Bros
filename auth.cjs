@@ -1,0 +1,19 @@
+const fs=require('node:fs'),path=require('node:path'),crypto=require('node:crypto');
+const {ROLES}=require('./access.cjs');
+function createAuth(root){
+ const file=path.join(root,'users.json');let users=fs.existsSync(file)?JSON.parse(fs.readFileSync(file,'utf8')):[];const sessions=new Map(),attempts=new Map();
+ const save=()=>{fs.writeFileSync(file+'.tmp',JSON.stringify(users,null,2));fs.renameSync(file+'.tmp',file);};
+ const safe=u=>({id:u.id,name:u.name,username:u.username,role:u.role,grants:u.grants,disabled:!!u.disabled});
+ const password=p=>{if(typeof p!=='string'||p.length<10||p.length>128)throw Error('Parola 10–128 karakter olmalı.');const salt=crypto.randomBytes(16).toString('hex');return {salt,hash:crypto.scryptSync(p,salt,64).toString('hex')};};
+ const fields=v=>{if(typeof v.name!=='string'||!v.name.trim()||v.name.length>100||typeof v.username!=='string'||!/^[a-zA-Z0-9._-]{3,60}$/.test(v.username)||!ROLES[v.role])throw Error('Ad, kullanıcı adı veya rol geçersiz.');};
+ const issue=(res,u)=>{const token=crypto.randomBytes(32).toString('hex');sessions.set(token,{id:u.id,expires:Date.now()+12*3600000});res.setHeader('Set-Cookie',`buros_session=${token}; HttpOnly; SameSite=Strict; Path=/; Max-Age=43200`);return safe(u);};
+ const token=req=>(req.headers.cookie||'').split(';').map(x=>x.trim()).find(x=>x.startsWith('buros_session='))?.slice(14);
+ const user=req=>{const session=sessions.get(token(req));if(!session||session.expires<Date.now())return null;return users.find(u=>u.id===session.id&&!u.disabled)||null;};
+ return {safe,user,needsSetup:()=>!users.length,list:()=>users.map(safe),
+ setup(v,res){if(users.length){const e=Error('Yönetici zaten oluşturuldu.');e.status=409;throw e;}v.role='admin';fields(v);const u={id:crypto.randomUUID(),name:v.name.trim(),username:v.username.toLowerCase(),role:'admin',grants:[],disabled:false,...password(v.password)};users.push(u);save();return issue(res,u);},
+ login(v,req,res){const key=req.socket.remoteAddress;const a=attempts.get(key)||{count:0,start:Date.now()};if(Date.now()-a.start>900000){a.count=0;a.start=Date.now();}if(a.count>=20){const e=Error('Çok fazla deneme. 15 dakika sonra tekrar deneyin.');e.status=429;throw e;}a.count++;attempts.set(key,a);const u=users.find(u=>u.username===String(v.username).toLowerCase()&&!u.disabled);const salt=u?.salt||'0'.repeat(32);const hash=crypto.scryptSync(String(v.password||'').slice(0,128),salt,64);if(!u||!crypto.timingSafeEqual(hash,Buffer.from(u.hash,'hex'))){const e=Error('Kullanıcı adı veya parola hatalı.');e.status=401;throw e;}attempts.delete(key);return issue(res,u);},
+ logout(req,res){sessions.delete(token(req));res.setHeader('Set-Cookie','buros_session=; HttpOnly; SameSite=Strict; Path=/; Max-Age=0');},
+ update(v,actor,state){fields(v);let u=users.find(u=>u.id===v.id);const username=v.username.toLowerCase();if(users.some(x=>x.username===username&&x.id!==v.id))throw Error('Bu kullanıcı adı zaten kullanılıyor.');if(!Array.isArray(v.grants)||v.grants.some(g=>!['site','client'].includes(g.scope)||!['view','edit'].includes(g.level)||!(g.scope==='site'?state.projects:state.clients).some(x=>x.id===g.targetId)))throw Error('Erişim kapsamı geçersiz.');if(u?.id===actor.id&&(v.role!=='admin'||v.disabled))throw Error('Kendi yönetici erişiminizi kaldıramazsınız.');const p=v.password?password(v.password):null;if(!u&&!p)throw Error('Yeni kullanıcı için parola belirleyin.');if(!u){u={id:crypto.randomUUID()};users.push(u);}Object.assign(u,{name:v.name.trim(),username,role:v.role,grants:v.grants,disabled:!!v.disabled},p||{});save();for(const [key,s]of sessions)if(s.id===u.id&&u.id!==actor.id)sessions.delete(key);return safe(u);}
+ };
+}
+module.exports={createAuth};

@@ -1,0 +1,10 @@
+{
+  "name": "buros",
+  "version": "0.3.0",
+  "private": true,
+  "scripts": {
+    "start": "node server.cjs",
+    "check": "node --check app.js && node --check server.cjs && node --check model.mjs && node --check auth.cjs && node --check access.cjs && node --check calendar.mjs",
+    "test": "node --test tests/*.test.mjs"
+  }
+}
