@@ -44,6 +44,16 @@ Müşteri başlıkları kapanıp açılır. Şantiye altındaki bölümler açı
 
 Her kişi için müşteri veya şantiye bazında **Görüntüle** / **Görüntüle ve düzenle** verilir. Müşteri izni altındaki bütün şantiyelere miras kalır. İzinler birleşir; düzenleme izni görüntülemeden önceliklidir. Şantiyedeki “Doğrudan izin yok” seçimi üst müşteriden gelen izni iptal etmez. Her iki kapsamdan da izin kaldırılırsa erişim kapanır.
 
+Her müşteri/şantiye izninin yanında ayrı bir **Finans** işareti bulunur; bu işaret o kapsamın finans hareketlerini görüntülemeyi açar ve mevcut görüntüle/düzenle düzeyinden bağımsızdır. Finans hareketlerini oluşturmak, düzenlemek ve silmek yalnızca yöneticiye aittir.
+
+## Finans modülü
+
+Gelir ve gider hareketleri (hakediş, avans, taşeron ödemesi vb.) her zaman bir şantiyeye bağlanır; bu bağ üzerinden otomatik olarak müşteriye de ilişkilendirilmiş olur. Her hareket bir tür (Gelir/Gider), durum (Planlandı/Faturalandı/Ödendi ya da Tahsil edildi), tutar, tarih, kategori ve not taşır.
+
+- **Finans** menüsü, yöneticiye ve şantiye/müşteri bazında finans izni verilmiş kişilere görünür; menüde tüm çalışma alanının gelir/gider/net bakiye özeti ve filtrelenebilir hareket listesi yer alır.
+- Şantiye detayındaki **Finans** sekmesi ve müşteri sayfasındaki **Finans özeti**, yalnızca o şantiye/müşteri için finans izni olanlara görünür ve sadece ilgili kayıtları listeler.
+- Sunucu, finans hareketlerini `/api/state` içinde ayrıca filtreler: bir kullanıcı finans izni olmayan bir şantiyenin hareketlerini API üzerinden de göremez. Finans hareketi ekleme/düzenleme/silme sunucu tarafında yöneticiyle sınırlıdır; başka bir rolün gönderdiği finans değişiklikleri sessizce yok sayılır.
+
 Kontrol yalnızca arayüzde değildir: sunucu, okunan çalışma alanını filtreler; yazmaları kapsam ve role göre denetler. Kapsam dışında kalan şantiyeler güncellenmez. Dosya indirme/yükleme de şantiye yetkisine bağlıdır. Parolalar scrypt ile özetlenir, oturum çerezleri HttpOnly ve SameSite=Strict kullanır. Hesap/izin değişiklikleri ilgili kişinin mevcut oturumlarını sonlandırır (işlemi yapan yöneticinin kendi oturumu hariç).
 
 ## Takvim çalışma alanı

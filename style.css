@@ -20,3 +20,35 @@
 @media(max-width:760px){.tree-breadcrumb{font-size:9px;gap:9px;padding:12px;flex-wrap:wrap}.tree-client-heading{align-items:flex-start;gap:12px;flex-wrap:wrap}.tree-client-heading>div{margin-left:48px}.tree-site{grid-template-columns:100px minmax(0,1fr);gap:13px}.tree-sites{padding:0 15px 0 32px}.tree-sites:before{left:13px}.tree-branch{left:-18px;width:17px}.tree-site-cover .project-cover{height:138px}.tree-site-cover .building{left:15%;transform:skewY(-18deg) scale(.75)}.tree-site-title{font-size:16px;gap:6px}.tree-site-info .eyebrow{font-size:6px}.tree-section-links{gap:4px}.tree-section-links button{font-size:8px;padding:4px}.tree-section-links .icon{width:10px}.tree-site-progress{flex-wrap:wrap;gap:6px}.tree-site-progress>.text-button{font-size:9px}.role-grid{grid-template-columns:1fr}.role-card{padding:22px}.role-card>span{position:absolute;right:24px;top:20px}.role-card h2{font-size:19px}.role-card p{font-size:11px;max-width:80%}.team-row>.pill{font-size:9px}.team-row .secondary{font-size:9px}.team-row .team-access-count{margin-left:43px;margin-right:auto}.grant-row select{max-width:157px;font-size:9px}.auth-layout{grid-template-columns:1fr}.auth-brand{padding:28px 30px}.auth-brand .brand{margin-bottom:22px}.auth-brand>h1{font-size:27px;margin:12px 0}.auth-brand>h1 em{font-size:33px}.auth-brand .architecture,.auth-role-line,.auth-brand>p{display:none}.auth-form{max-width:calc(100% - 50px);width:400px;padding:35px 0}.auth-form h2{font-size:25px}.calendar-toolbar-date{width:100%;flex-basis:100%}.calendar-toolbar{justify-content:space-between;gap:12px}.calendar-toolbar h2{font-size:15px}.canvas-tag{display:block;margin-left:auto}.calendar-toolbar .calendar-controls{gap:4px}.zoom-controls button{min-height:30px}.calendar-viewport{height:580px}.canvas-status{font-size:7px;padding:10px}.tree-site-progress small{display:none}}
 @media(prefers-reduced-motion:reduce){.calendar-viewport{scroll-behavior:auto}}
 .tree-client-heading{justify-content:flex-start}.tree-client-heading>.tree-customer{flex:1}.tree-collapse{color:#6d8b4e;padding:4px;margin-left:-7px}.tree-collapse[aria-expanded=false] .icon{transform:rotate(-90deg)}.tree-site-cover{align-self:start}.tree-section{font-size:9px}.tree-section summary{cursor:pointer;list-style:none;display:flex;align-items:center;gap:5px;padding:6px 8px;background:#edf3e4;border:1px solid #cbdabd;border-radius:4px;color:#5c7b42}.tree-section summary::-webkit-details-marker{display:none}.tree-section summary:after{content:'+';padding-left:5px;color:#8da773}.tree-section[open]{flex-basis:100%}.tree-section[open] summary:after{content:'−'}.tree-section>div{border-left:1px solid #bacaab;margin:7px 0 10px 10px;padding-left:10px}.tree-section>div>button{display:flex;align-items:center;width:100%;padding:8px;gap:7px;margin:3px 0;background:#f7faf1;border:1px solid #e0e8d7}.tree-section>div>button>span:nth-child(2){flex:1;text-align:left}.tree-section .pill{font-size:8px}.tree-section .icon{width:12px;height:12px}.tree-site-info .tree-section summary>span{margin-left:4px}.tree-client-heading .tree-collapse:focus-visible{outline:2px solid #627f49}
+/* Kontrast ve modernizasyon güncellemesi — daha okunur küçük metin, daha belirgin derinlik */
+.muted,.eyebrow,small,.card-meta,.metric small,.agenda-item small,.activity-row small,.activity-row time,.file-row small,.breadcrumb,.save-indicator,.count,.tabs>span,.team-access-count,.grant-row small,.canvas-status,.canvas-status i,.command-footer,.auth-form>small{color:#4b5b41}
+.project-card p,.template-body p,.body-copy,.subtitle,.client-card>p,.tree-site-info>p,.info-note p{color:#425338}
+.tiny-status{color:#3c5a26;background:#e2ecd2}.tiny-status.warm{color:#7a4a17;background:#f5e2c4}
+.pill,.status-select{font-weight:600}
+th{color:#5a6a4e}
+::-webkit-scrollbar{width:11px;height:11px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:#c3cfb2;border-radius:8px;border:3px solid var(--paper)}::-webkit-scrollbar-thumb:hover{background:#a9b891}*{scrollbar-color:#c3cfb2 transparent;scrollbar-width:thin}
+.surface,.workflow-card,.client-card,.template-card,.agenda,.tree-client{transition:box-shadow .22s,transform .22s,border-color .22s}
+.surface:hover,.client-card:hover,.template-card:hover{box-shadow:0 10px 26px #35452414;border-color:#c2d0b0}
+.primary{background:linear-gradient(180deg,#3c5a41,var(--olive));box-shadow:0 1px 0 #ffffff14 inset,0 1px 3px #1c2b1e30}
+.primary:hover{background:linear-gradient(180deg,#2c4a31,#243e2a);box-shadow:0 1px 0 #ffffff14 inset,0 6px 16px #1c2b1e30}
+.secondary:hover{border-color:#b9c8a6;box-shadow:0 3px 10px #35452410}
+.danger:hover{background:#8e5b41}
+dialog::backdrop{backdrop-filter:blur(7px)}
+dialog{box-shadow:0 40px 120px #1c321f30,0 2px 0 #ffffff59 inset}
+.tabs button{transition:color .18s,border-color .18s}
+.nav-item{transition:background .18s,color .18s,transform .18s}.nav-item:hover{transform:translateX(2px)}
+.icon-button{transition:background .18s,transform .18s}.icon-button:hover{transform:translateY(-1px)}
+button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid #5a7940;outline-offset:2px}
+/* Finans modülü */
+.finance-metrics{margin:20px 0 28px}
+.finance-metrics.cols-3{grid-template-columns:repeat(3,1fr)}
+.finance-metrics .metric strong{font-size:24px;letter-spacing:-.6px}
+.finance-amount{font-weight:600;white-space:nowrap}
+.finance-amount.income{color:#3c6b2c}
+.finance-amount.expense{color:#95502b}
+.grant-finance{display:flex;align-items:center;gap:6px;font-size:9px;color:#54683f;white-space:nowrap}
+.grant-finance .icon{width:12px;height:12px;color:#7c9a5a}
+.grant-finance input{accent-color:#718f4f}
+@media(max-width:1200px){.finance-metrics.cols-4{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:760px){.finance-metrics,.finance-metrics.cols-3,.finance-metrics.cols-4{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:440px){.finance-metrics,.finance-metrics.cols-3,.finance-metrics.cols-4{grid-template-columns:1fr}.grant-row{flex-wrap:wrap;gap:8px}.grant-row select{max-width:none;flex:1}}

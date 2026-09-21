@@ -8,9 +8,11 @@ const ROOT = process.env.BUROS_DATA_DIR || path.join(__dirname, '.buros');
 fs.mkdirSync(path.join(ROOT, 'files'), { recursive: true });
 const statePath = path.join(ROOT, 'workspace.json');
 let state = fs.existsSync(statePath) ? JSON.parse(fs.readFileSync(statePath, 'utf8')) : null;
+if (state && !Array.isArray(state.finance)) state.finance = [];
 const auth=createAuth(ROOT);
 const publicFiles = {'/':'index.html','/index.html':'index.html','/app.js':'app.js','/model.mjs':'model.mjs','/calendar.mjs':'calendar.mjs','/style.css':'style.css','/favicon.svg':'favicon.svg'};
-for(const name of fs.readdirSync(path.join(__dirname,'fonts')))if(/^[a-zA-Z0-9_.-]+\.(ttf|css)$/.test(name))publicFiles['/fonts/'+name]='fonts/'+name;
+const fontsDir=path.join(__dirname,'fonts');
+if(fs.existsSync(fontsDir))for(const name of fs.readdirSync(fontsDir))if(/^[a-zA-Z0-9_.-]+\.(ttf|css)$/.test(name))publicFiles['/fonts/'+name]='fonts/'+name;
 function json(res, code, body) { res.writeHead(code, {'Content-Type':'application/json; charset=utf-8','Cache-Control':'no-store'}); res.end(JSON.stringify(body)); }
 async function body(req, limit) { const chunks=[]; let size=0; for await (const chunk of req) { size+=chunk.length; if(size>limit) { const e=new Error('Dosya boyutu sınırı aşıldı.'); e.status=413; throw e; } chunks.push(chunk); } return Buffer.concat(chunks); }
 function valid(s) {
@@ -25,6 +27,8 @@ function valid(s) {
  if(!arr(s.projects)||!unique(s.projects)||!s.projects.every(p=>id(p.id)&&text(p.name)&&text(p.location)&&s.clients.some(c=>c.id===p.clientId)&&arr(p.sections)&&unique(p.sections)&&p.sections.every(g=>id(g.id)&&text(g.name)&&Number.isFinite(g.weight)&&g.weight>0&&arr(g.items)&&unique(g.items)&&g.items.every(item))))return false;
  const itemIds=s.projects.flatMap(p=>p.sections.flatMap(g=>g.items));if(!unique(itemIds))return false;
  if(!arr(s.templates)||!unique(s.templates)||!s.templates.every(t=>id(t.id)&&text(t.name)&&text(t.description)&&arr(t.sections)&&t.sections.every(g=>text(g.name)&&Number.isFinite(g.weight)&&g.weight>0&&arr(g.items)&&g.items.every(o=>text(o.name)&&s.workflows.some(w=>w.id===o.workflowId)&&(!o.properties||arr(o.properties)&&o.properties.every(p=>text(p.name)&&['text','number','date','checkbox','select','email','url'].includes(p.type)&&(!p.options||arr(p.options)&&p.options.every(text))))))))return false;
+ const finance=list=>arr(list)&&list.every(f=>id(f.id)&&s.projects.some(p=>p.id===f.projectId)&&['income','expense'].includes(f.type)&&text(f.title)&&f.title.trim()&&Number.isFinite(f.amount)&&f.amount>=0&&text(f.date)&&(!f.date||/^\d{4}-\d{2}-\d{2}$/.test(f.date))&&['planned','invoiced','paid'].includes(f.status)&&text(f.category)&&f.category.trim()&&text(f.notes||'')&&text(f.createdAt)&&text(f.createdBy||''));
+ if(!finance(s.finance)||!unique(s.finance))return false;
  return arr(s.activity)&&s.activity.every(a=>text(a.text)&&text(a.time));
 }
 const server=http.createServer(async(req,res)=>{try{
