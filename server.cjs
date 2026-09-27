@@ -31,9 +31,9 @@ function valid(s) {
  if(!finance(s.finance)||!unique(s.finance))return false;
  return arr(s.activity)&&s.activity.every(a=>text(a.text)&&text(a.time));
 }
-const server=http.createServer(async(req,res)=>{try{
+const handler=async(req,res)=>{try{
  res.setHeader('X-Content-Type-Options','nosniff');res.setHeader('X-Frame-Options','DENY'); const host=req.headers.host||'';
- if(!/^(127\.0\.0\.1|localhost)(:\d+)?$/.test(host))return json(res,403,{error:'Yerel bağlantı gerekli.'});
+ if(!/^(127\.0\.0\.1|localhost|\[::1\])(:\d+)?$/.test(host))return json(res,403,{error:'Yerel bağlantı gerekli.'});
  if(req.headers.origin && req.headers.origin!==`http://${host}`)return json(res,403,{error:'Geçersiz kaynak.'});
  const url=new URL(req.url,`http://${host}`);
  if(url.pathname==='/api/session'&&req.method==='GET')return json(res,200,{setupRequired:auth.needsSetup(),user:auth.user(req)?auth.safe(auth.user(req)):null});
@@ -69,7 +69,10 @@ const server=http.createServer(async(req,res)=>{try{
  const id=crypto.randomUUID();fs.writeFileSync(path.join(ROOT,'files',id),bytes,{flag:'wx'});const meta={id,name,size:bytes.length,createdAt:new Date().toISOString(),objectId,uploadedBy:actor.id};fs.writeFileSync(path.join(ROOT,'files',id+'.json'),JSON.stringify(meta));return json(res,201,meta);}
  if(url.pathname.startsWith('/api/files/')&&req.method==='GET'){
  const id=url.pathname.split('/').pop();if(!/^[a-f0-9-]{36}$/.test(id))return json(res,404,{error:'Dosya bulunamadı.'});const site=state?.projects.find(p=>p.sections.some(s=>s.items.some(o=>o.files.some(f=>f.id===id))));if(!levelFor(actor,site))return json(res,404,{error:'Dosya bulunamadı.'});const file=path.join(ROOT,'files',id);if(!fs.existsSync(file+'.json'))return json(res,404,{error:'Dosya bulunamadı.'});const meta=JSON.parse(fs.readFileSync(file+'.json','utf8'));res.writeHead(200,{'Content-Type':'application/octet-stream','Content-Disposition':`attachment; filename*=UTF-8''${encodeURIComponent(meta.name)}`,'Content-Length':meta.size});return fs.createReadStream(file).pipe(res);}
- const file=publicFiles[url.pathname];if(!file||!['GET','HEAD'].includes(req.method))return json(res,404,{error:'Bulunamadı.'});const type=file.endsWith('.ttf')?'font/ttf':file.endsWith('.css')?'text/css':file.endsWith('.js')||file.endsWith('.mjs')?'text/javascript':file.endsWith('.svg')?'image/svg+xml':'text/html';res.writeHead(200,{'Content-Type':type+'; charset=utf-8','Cache-Control':'no-cache'});if(req.method==='HEAD')return res.end();fs.createReadStream(path.join(__dirname,file)).pipe(res);
- }catch(e){json(res,e.status||400,{error:e.message||'İşlem tamamlanamadı.'});}});
-if(require.main===module)server.listen(Number(process.env.PORT)||3000,'127.0.0.1',()=>console.log(`BürOS hazır: http://localhost:${process.env.PORT||3000}`));
-module.exports={server,valid};
+ const file=publicFiles[url.pathname];if(!file&&url.pathname==='/fonts/fonts.css'){res.writeHead(200,{'Content-Type':'text/css; charset=utf-8'});return res.end('');}if(!file||!['GET','HEAD'].includes(req.method))return json(res,404,{error:'Bulunamadı.'});const type=file.endsWith('.ttf')?'font/ttf':file.endsWith('.css')?'text/css':file.endsWith('.js')||file.endsWith('.mjs')?'text/javascript':file.endsWith('.svg')?'image/svg+xml':'text/html';res.writeHead(200,{'Content-Type':type+'; charset=utf-8','Cache-Control':'no-cache'});if(req.method==='HEAD')return res.end();fs.createReadStream(path.join(__dirname,file)).pipe(res);
+ }catch(e){json(res,e.status||400,{error:e.message||'İşlem tamamlanamadı.'});}};
+const server=http.createServer(handler);
+// Some systems resolve "localhost" to ::1 first; an IPv6 loopback listener avoids a refused connection there.
+function start(port=Number(process.env.PORT)||3000){server.listen(port,'127.0.0.1',()=>console.log(`BürOS hazır: http://localhost:${port}`));const v6=http.createServer(handler);v6.on('error',()=>{});v6.listen(port,'::1');}
+if(require.main===module)start();
+module.exports={server,valid,start};

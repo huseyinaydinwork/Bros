@@ -10,6 +10,14 @@ npm start
 
 http://localhost:3000 adresini açın. İlk açılışta kendi yönetici hesabınızı ve en az 10 karakterlik parolanızı oluşturun. Mevcut çalışma alanı ve dosyalar korunur. Yönetici daha sonra **Ekip ve erişim** ekranından hesapları ve izinleri tanımlar. Varsayılan/parolası bilinen üretim hesabı yoktur.
 
+### Demo hesabıyla hızlı başlangıç
+
+```sh
+npm run demo
+```
+
+Bu komut `demo` / `demo123456` bilgileriyle bir yönetici hesabı oluşturur (hesap zaten varsa parolasını bu değere sıfırlar), çalışma alanı yoksa örnek verileri yükler ve sunucuyu başlatır. Parolanızı unuttuğunuzda da bu komutla yeniden giriş yapabilirsiniz. Bilinen bir parola tanımladığı için yalnızca yerel deneme amacıyla kullanın.
+
 ```sh
 npm run check
 npm test
