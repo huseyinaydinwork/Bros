@@ -11,7 +11,11 @@ npm start
 - `http://localhost:3000` → tanıtım sayfası (landing)
 - `http://localhost:3000/app` → uygulama (giriş yap / üye ol)
 
-İlk üye olan kişi yönetici olur ve örnek bir çalışma alanıyla başlar. Sonradan üye olanlar erişimi olmayan **Büro Personeli** olarak açılır; yönetici **Ekip ve erişim** ekranından rollerini ve müşteri/şantiye izinlerini verir. Yönetici de doğrudan hesap oluşturabilir. Varsayılan/parolası bilinen üretim hesabı yoktur.
+### Hesaplar ve çalışma alanları
+
+Herkes e-posta adresi ve parolayla üye olur. Hesap açıldıktan sonra kişi ya **yeni bir çalışma alanı kurar** (alanın yöneticisi olur, isterse örnek verilerle başlar) ya da **davet koduyla mevcut bir alana katılır**. Davet koduyla katılan kişi **Büro Personeli** rolüyle ve hiçbir erişimi olmadan başlar; yönetici **Ekip ve erişim** ekranından rolünü ve müşteri/şantiye izinlerini verir. Yönetici ekibe e-posta adresiyle doğrudan da kişi ekleyebilir: o e-postayla hesap varsa kişi kendi hesabıyla eklenir, yoksa belirlenen ilk parolayla hesap açılır.
+
+Bir hesap birden fazla çalışma alanına üye olabilir; kenar çubuğundaki alan adından alanlar arasında geçilir. Her çalışma alanının kayıtları, dosyaları, ekibi ve izinleri tamamen ayrıdır. Davet kodu Ekip ekranından kopyalanır, yenilenir (eski kod geçersiz olur) veya kapatılır. Varsayılan/parolası bilinen üretim hesabı yoktur.
 
 ### Tanıtım sayfası
 
@@ -22,7 +26,9 @@ npm start
 - Arama çubuğu üst çubukta; `Ctrl/⌘ + K` ile de açılır.
 - Genel bakış ekranında müşteri → şantiye → kayıt durumu akış diyagramı; düğümlere tıklayınca ilgili sayfa açılır.
 - Proje ağacında müşteri ve şantiye blokları sürükleyerek (veya ↑ ↓ düğmeleriyle) sıralanır; yalnızca yönetici için.
-- Şantiye görselleri ilerlemeye göre kat kat yükselen izometrik binalardır; bina tamamlanana kadar yanında vinç durur.
+- Şantiye görselleri, şantiye kimliğinden türetilen kat planı çizimleridir (aks, duvar, kapı, pencere, ölçü çizgisi). Şantiye ilerledikçe mahaller sırayla taranır.
+- Şantiye sayfasının başında bir başlık görseli yer alır. Düzenleme izni olan kişi PNG/JPEG/WebP (en fazla 8 MB) yükleyebilir veya kaldırabilir. **Ayarlar → Büro bilgileri**'ndeki seçenek açıksa, görsel yüklenmemiş şantiyelerde kat planı çizimi gösterilir; kapalıysa başlık alanı gizlenir.
+- Durumlar renkli etiket ya da nokta yerine düz metinle gösterilir; geciken işler yalnızca metin rengiyle ayrılır.
 - **Ayarlar → Yazı tipi** bölümünden beş font seçeneği arasında geçiş yapılır (tarayıcıya kaydedilir). "Sistem" seçeneği internet bağlantısı gerektirmez.
 
 ### Demo hesabıyla hızlı başlangıç
@@ -31,7 +37,7 @@ npm start
 npm run demo
 ```
 
-Bu komut `demo` / `demo123456` bilgileriyle bir yönetici hesabı oluşturur (hesap zaten varsa parolasını bu değere sıfırlar), çalışma alanı yoksa örnek verileri yükler ve sunucuyu başlatır. Parolanızı unuttuğunuzda da bu komutla yeniden giriş yapabilirsiniz. Bilinen bir parola tanımladığı için yalnızca yerel deneme amacıyla kullanın.
+Bu komut `demo@buros.local` / `demo123456` bilgileriyle bir hesap ve yöneticisi olduğu **Demo Mimarlık** çalışma alanını oluşturur (hesap zaten varsa parolasını bu değere sıfırlar), alan boşsa örnek verileri yükler, davet kodunu yazdırır ve sunucuyu başlatır. Parolanızı unuttuğunuzda da bu komutla yeniden giriş yapabilirsiniz. Bilinen bir parola tanımladığı için yalnızca yerel deneme amacıyla kullanın.
 
 ```sh
 npm run check
@@ -71,7 +77,9 @@ Her müşteri/şantiye izninin yanında ayrı bir **Finans** işareti bulunur; b
 
 ## Finans modülü
 
-Gelir ve gider hareketleri (hakediş, avans, taşeron ödemesi vb.) her zaman bir şantiyeye bağlanır; bu bağ üzerinden otomatik olarak müşteriye de ilişkilendirilmiş olur. Her hareket bir tür (Gelir/Gider), durum (Planlandı/Faturalandı/Ödendi ya da Tahsil edildi), tutar, tarih, kategori ve not taşır.
+Gelir ve gider hareketleri (hakediş, avans, taşeron ödemesi vb.) her zaman bir şantiyeye bağlanır; bu bağ üzerinden otomatik olarak müşteriye de ilişkilendirilmiş olur. Her hareket bir tür (Gelir/Gider), durum, tutar, tarih, kategori ve not taşır.
+
+Finans durumları **İş akışları** ekranındaki **Finans** akışından düzenlenir (varsayılan: Planlandı, Faturalandı, Ödendi). Tamamlanan tipindeki durumlar gerçekleşmiş, bekleyen tipindekiler planlanan tutar olarak özetlenir. Kayıt durumları gibi finans durumu da listeden satır içinde değiştirilebilir.
 
 - **Finans** menüsü, yöneticiye ve şantiye/müşteri bazında finans izni verilmiş kişilere görünür; menüde tüm çalışma alanının gelir/gider/net bakiye özeti ve filtrelenebilir hareket listesi yer alır.
 - Şantiye detayındaki **Finans** sekmesi ve müşteri sayfasındaki **Finans özeti**, yalnızca o şantiye/müşteri için finans izni olanlara görünür ve sadece ilgili kayıtları listeler.
@@ -93,21 +101,24 @@ Kontrol yalnızca arayüzde değildir: sunucu, okunan çalışma alanını filtr
 
 Şablondan/boş şantiye, özel alanlar (metin/sayı/tarih/checkbox/seçim/e-posta/URL), dinamik durumlar, bölüm ağırlıklı ilerleme, sürükle-bırak liste/pano, müşteri iletişim bilgileri, kayıt notları/yorumlar, arama, geciken iş bildirimleri, dosya sürümleri ve hareket geçmişi.
 
-Dosya sınırı 25 MB/dosyadır. Aynı adlı dosyalar eski sürümleri silmeden saklanır. Uygulama içi DWG/PDF görüntüleyici yerine indirme desteklenir.
+Dosyalar bir kayda (kayıt çekmecesi) ya da doğrudan şantiyeye (şantiye sayfası → Dosyalar sekmesi, sürükle-bırak desteklenir) yüklenir. Dosya sınırı 25 MB/dosyadır. Aynı adlı dosyalar eski sürümleri silmeden saklanır. Sunucu, yeni dosya referanslarının gerçekten o şantiyeye veya kayda yüklendiğini doğrular. Uygulama içi DWG/PDF görüntüleyici yerine indirme desteklenir.
 
 ## Veriler ve yedekleme
 
-- `.buros/workspace.json`: çalışma alanı ve dosya referansları
-- `.buros/files/`: gerçek dosyalar ve metaveriler
-- `.buros/users.json`: hesaplar, parola özetleri ve izinler
+- `.buros/accounts.json`: hesaplar (e-posta, ad, parola özeti)
+- `.buros/spaces.json`: çalışma alanları, davet kodları, üyelikler, roller ve izinler
+- `.buros/spaces/<alan-id>/workspace.json`: o alanın kayıtları ve dosya referansları
+- `.buros/spaces/<alan-id>/files/`: o alanın dosyaları ve metaverileri
 
-Yönetici JSON yedeği dışa/içe aktarabilir; JSON dosya baytlarını ve kullanıcı hesaplarını içermez. Tam yedek için sunucu kapalıyken bütün `.buros` klasörünü kopyalayın. JSON geri yüklemede referans verilen dosyaların aynı veri dizininde bulunması gerekir.
+Eski tek büro kurulumları (`users.json` + `workspace.json`) ilk açılışta otomatik olarak tek bir çalışma alanına taşınır; eski kullanıcı adları giriş kimliği olarak çalışmaya devam eder.
+
+Yönetici bulunduğu çalışma alanının JSON yedeğini dışa/içe aktarabilir; JSON dosya baytlarını ve kullanıcı hesaplarını içermez. Tam yedek için sunucu kapalıyken bütün `.buros` klasörünü kopyalayın. JSON geri yüklemede referans verilen dosyaların aynı veri dizininde bulunması gerekir.
 
 API atomik dosya yazımı, revision çakışma denetimi, kaynak kontrolü ve şema doğrulaması kullanır. Testler geçici dizinlerde çalışır. `test-output/browser` UI denemelerinin ayrı çalışma alanıdır; gerçek veriler değildir.
 
 ## Dağıtım sınırı
 
-Bu, yerel tek-büro uygulamasıdır; gerçek kullanıcı ve kapsam izinleri vardır. Uzak ofis erişimi için HTTPS, kalıcı oturum altyapısı, veritabanı / yedekleme operasyonu ve dağıtım yapılandırması ayrıca hazırlanmalıdır. Sunucu hâlâ yalnızca localhost'ta dinler. Müşteri portalı, e-posta/WhatsApp gönderimi, formüller ve çoklu organizasyon yoktur.
+Bu, yerel tek-büro uygulamasıdır; gerçek kullanıcı ve kapsam izinleri vardır. Uzak ofis erişimi için HTTPS, kalıcı oturum altyapısı, veritabanı / yedekleme operasyonu ve dağıtım yapılandırması ayrıca hazırlanmalıdır. Sunucu hâlâ yalnızca localhost'ta dinler. Oturumlar bellekte tutulur. Müşteri portalı, e-posta doğrulama/parola sıfırlama, e-posta/WhatsApp gönderimi ve formüller yoktur.
 
 ## Kaynaklar
 
