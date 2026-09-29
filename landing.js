@@ -47,22 +47,30 @@
   addEventListener('scroll', () => { target = storyProgress(); updatePage(); }, { passive: true });
   updatePage(); updateChapters(cur);
 
-  // Waitlist
+  // Billing period toggle
+  document.querySelectorAll('[data-billing]').forEach(b => b.addEventListener('click', () => {
+    const yearly = b.dataset.billing === 'yearly';
+    document.querySelectorAll('[data-billing]').forEach(x => x.setAttribute('aria-pressed', String(x === b)));
+    document.querySelectorAll('[data-monthly]').forEach(el => { el.textContent = yearly ? el.dataset.yearly : el.dataset.monthly; });
+    document.querySelectorAll('[data-monthly-note]').forEach(el => { el.textContent = yearly ? el.dataset.yearlyNote : el.dataset.monthlyNote; });
+  }));
+
+  // Demo request
   const form = document.getElementById('waitlist'), msg = document.getElementById('wl-msg');
   document.querySelectorAll('[data-interest]').forEach(a => a.addEventListener('click', () => { form.plan.value = a.dataset.interest; }));
   form.addEventListener('submit', async e => {
     e.preventDefault();
     const email = form.email.value.trim();
     msg.classList.remove('error');
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) { msg.textContent = 'Geçerli bir e-posta adresi yaz.'; msg.classList.add('error'); form.email.focus(); return; }
-    if (window.BUROS_PREVIEW) { try { const saved = JSON.parse(localStorage.getItem('buros-waitlist') || '[]'); saved.push({ email, plan: form.plan.value }); localStorage.setItem('buros-waitlist', JSON.stringify(saved)); } catch {} msg.textContent = 'Önizleme sürümü: e-posta yalnızca bu tarayıcıda saklandı, kimseye gönderilmedi.'; form.email.value = ''; return; }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) { msg.textContent = 'Geçerli bir e-posta adresi yazın.'; msg.classList.add('error'); form.email.focus(); return; }
+    if (window.BUROS_PREVIEW) { try { const saved = JSON.parse(localStorage.getItem('buros-waitlist') || '[]'); saved.push({ email, plan: form.plan.value, company: form.company.value.trim() }); localStorage.setItem('buros-waitlist', JSON.stringify(saved)); } catch {} msg.textContent = 'Önizleme sürümü: talep yalnızca bu tarayıcıda saklandı, kimseye gönderilmedi.'; form.email.value = ''; return; }
     const button = form.querySelector('button'); button.disabled = true;
     try {
-      const r = await fetch('/api/waitlist', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, plan: form.plan.value }) });
+      const r = await fetch('/api/waitlist', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, plan: form.plan.value, company: form.company.value.trim() }) });
       if (!r.ok) throw new Error((await r.json().catch(() => ({}))).error || 'Kaydedilemedi.');
-      msg.textContent = 'Teşekkürler. Bulut sürümü hazır olduğunda bu adrese haber vereceğiz.';
-      form.email.value = '';
-    } catch (err) { msg.textContent = 'Kaydedilemedi. Birazdan tekrar dene.'; msg.classList.add('error'); }
+      msg.textContent = 'Teşekkürler. Ekibimiz bir iş günü içinde bu adrese dönüş yapacak.';
+      form.email.value = ''; form.company.value = '';
+    } catch (err) { msg.textContent = 'Gönderilemedi. Birazdan tekrar deneyin.'; msg.classList.add('error'); }
     finally { button.disabled = false; }
   });
 
@@ -75,16 +83,16 @@
 
   const small = innerWidth < 700;
   renderer.setPixelRatio(Math.min(devicePixelRatio, small ? 1.5 : 2));
-  const NIGHT = new THREE.Color(0x0e1611), DUSK = new THREE.Color(0x1b2a2c);
+  const NIGHT = new THREE.Color(0x0e1511), DUSK = new THREE.Color(0x141f19);
   renderer.setClearColor(NIGHT);
   const scene = new THREE.Scene();
   scene.fog = new THREE.Fog(NIGHT.clone(), 38, 150);
   const camera = new THREE.PerspectiveCamera(34, 1, .1, 500);
 
-  scene.add(new THREE.HemisphereLight(0xb9cfa0, 0x0b120d, .75));
-  const sun = new THREE.DirectionalLight(0xfff0d0, .7); sun.position.set(30, 40, 14); scene.add(sun);
+  scene.add(new THREE.HemisphereLight(0xc9d3c0, 0x0b120d, .75));
+  const sun = new THREE.DirectionalLight(0xf4f2ea, .7); sun.position.set(30, 40, 14); scene.add(sun);
 
-  const LIME = 0xdbef9c, RUST = 0xc9814d, WARM = 0xf1cf78;
+  const LIME = 0xadbe8e, RUST = 0x7d887f, WARM = 0xe9e4cf; // brand sage, neutral steel, cream
   let seed = 7; const rand = () => { seed = (seed + 0x6D2B79F5) | 0; let t = Math.imul(seed ^ (seed >>> 15), 1 | seed); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
 
   // Ground, drawing sheet and grid
@@ -149,24 +157,24 @@
   const ghost = new THREE.LineSegments(ghostGeo, ghostMat); ghost.computeLineDistances(); ghost.position.y = HERO.floors * HERO.fh / 2; scene.add(ghost);
   addWindows(0, 0, HERO.w, HERO.d, HERO.floors, HERO.fh, heroWindows);
   heroWindows.sort((a, b) => a.y - b.y || a.r - b.r);
-  const heroLit = new THREE.InstancedMesh(winGeo, new THREE.MeshBasicMaterial({ color: 0xffe3a0 }), heroWindows.length);
+  const heroLit = new THREE.InstancedMesh(winGeo, new THREE.MeshBasicMaterial({ color: 0xf7f4e6 }), heroWindows.length);
   heroWindows.forEach((w, i) => { tmp.position.set(w.x, w.y, w.z); tmp.rotation.set(0, w.rot, 0); tmp.updateMatrix(); heroLit.setMatrixAt(i, tmp.matrix); });
   scene.add(heroLit);
 
   // Tower crane
   const crane = new THREE.Group(); crane.position.set(-3.6, 0, -2.9); scene.add(crane);
-  const craneMat = new THREE.MeshLambertMaterial({ color: RUST });
+  const craneMat = new THREE.MeshLambertMaterial({ color: 0x46524a });
   const mastH = HERO.floors * HERO.fh + 3.4;
   const mast = new THREE.Mesh(new THREE.BoxGeometry(.22, mastH, .22), craneMat); mast.position.y = mastH / 2; crane.add(mast);
   const lattice = []; for (let y = 0; y < mastH - .4; y += .45) lattice.push(new THREE.Vector3(-.13, y, .12), new THREE.Vector3(.13, y + .45, .12), new THREE.Vector3(.13, y, -.12), new THREE.Vector3(-.13, y + .45, -.12));
-  crane.add(new THREE.LineSegments(new THREE.BufferGeometry().setFromPoints(lattice), new THREE.LineBasicMaterial({ color: 0xe0a36b })));
+  crane.add(new THREE.LineSegments(new THREE.BufferGeometry().setFromPoints(lattice), new THREE.LineBasicMaterial({ color: 0x6f7d73 })));
   const jib = new THREE.Group(); jib.position.y = mastH; crane.add(jib);
   const arm = new THREE.Mesh(new THREE.BoxGeometry(11, .16, .18), craneMat); arm.position.x = -3.4; jib.add(arm);
-  const cw = new THREE.Mesh(new THREE.BoxGeometry(.9, .5, .5), new THREE.MeshLambertMaterial({ color: 0x5a4a38 })); cw.position.set(1.7, -.2, 0); jib.add(cw);
-  const cab = new THREE.Mesh(new THREE.BoxGeometry(.5, .4, .45), new THREE.MeshLambertMaterial({ color: 0xe8dcc0 })); cab.position.set(.1, -.35, .3); jib.add(cab);
-  jib.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0, 1.1, 0), new THREE.Vector3(-8.6, .05, 0), new THREE.Vector3(0, 1.1, 0), new THREE.Vector3(1.9, .05, 0)]), new THREE.LineBasicMaterial({ color: 0xe0a36b })));
-  const hookLine = new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(-6, 0, 0), new THREE.Vector3(-6, -3, 0)]), new THREE.LineBasicMaterial({ color: 0xbfae93 })); jib.add(hookLine);
-  const load = new THREE.Mesh(new THREE.BoxGeometry(.9, .18, .5), new THREE.MeshLambertMaterial({ color: 0xd9d2bf })); jib.add(load);
+  const cw = new THREE.Mesh(new THREE.BoxGeometry(.9, .5, .5), new THREE.MeshLambertMaterial({ color: 0x2c3530 })); cw.position.set(1.7, -.2, 0); jib.add(cw);
+  const cab = new THREE.Mesh(new THREE.BoxGeometry(.5, .4, .45), new THREE.MeshLambertMaterial({ color: 0xcfd5c8 })); cab.position.set(.1, -.35, .3); jib.add(cab);
+  jib.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0, 1.1, 0), new THREE.Vector3(-8.6, .05, 0), new THREE.Vector3(0, 1.1, 0), new THREE.Vector3(1.9, .05, 0)]), new THREE.LineBasicMaterial({ color: 0x6f7d73 })));
+  const hookLine = new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(-6, 0, 0), new THREE.Vector3(-6, -3, 0)]), new THREE.LineBasicMaterial({ color: 0x8e9990 })); jib.add(hookLine);
+  const load = new THREE.Mesh(new THREE.BoxGeometry(.9, .18, .5), new THREE.MeshLambertMaterial({ color: 0xadbe8e })); jib.add(load);
 
   // Office node and the two networks: tangled (problem) and ordered tree (solution)
   const office = new THREE.Mesh(new THREE.OctahedronGeometry(.9), new THREE.MeshBasicMaterial({ color: LIME, transparent: true })); office.position.set(0, 20, 0); scene.add(office);
@@ -190,7 +198,7 @@
   const dustN = small ? 500 : 1100, dustPos = new Float32Array(dustN * 3);
   for (let i = 0; i < dustN; i++) { dustPos[i * 3] = (rand() - .5) * 90; dustPos[i * 3 + 1] = rand() * 30; dustPos[i * 3 + 2] = (rand() - .5) * 90; }
   const dustGeo = new THREE.BufferGeometry(); dustGeo.setAttribute('position', new THREE.BufferAttribute(dustPos, 3));
-  const dust = new THREE.Points(dustGeo, new THREE.PointsMaterial({ color: LIME, size: .07, transparent: true, opacity: .45, depthWrite: false })); scene.add(dust);
+  const dust = new THREE.Points(dustGeo, new THREE.PointsMaterial({ color: LIME, size: .06, transparent: true, opacity: .22, depthWrite: false })); scene.add(dust);
 
   // Camera keyframes: close on the sheet → building rises → zoom out on the city → top view of the tree → zoom in on site → aerial dusk
   const K = [

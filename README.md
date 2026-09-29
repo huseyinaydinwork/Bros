@@ -1,6 +1,6 @@
 # BürOS — Büro ve Proje Operasyon Sistemi
 
-Türkçe proje operasyon uygulaması. Node.js 18+ dışında paket kurulumu gerektirmez. Yazı tipleri Google Fonts'tan yüklenir; bağlantı yoksa sistem fontlarına düşer.
+Mimarlık ve mühendislik büroları için çok kiracılı (SaaS) proje, evrak ve finans yönetim platformu. Node.js 18+ dışında paket kurulumu gerektirmez. Yazı tipleri Google Fonts'tan yüklenir; bağlantı yoksa sistem fontlarına düşer.
 
 ## Başlatma
 
@@ -19,12 +19,17 @@ Bir hesap birden fazla çalışma alanına üye olabilir; kenar çubuğundaki al
 
 ### Tanıtım sayfası
 
-`landing.html`, `landing.css`, `landing.js` ve `vendor/three.min.js` (Three.js r128, MIT). Kaydırmayla ilerleyen sinematik 3D sahne; kamera paftadan şehre uzaklaşır, şantiyeye yakınlaşır. `prefers-reduced-motion` açıkken animasyonlar durur; WebGL yoksa metinler düz arka planla gösterilir. Bekleme listesine bırakılan e-postalar `.buros/waitlist.json` dosyasına yazılır.
+`landing.html`, `landing.css`, `landing.js` ve `vendor/three.min.js` (Three.js r128, MIT). Kaydırmayla ilerleyen 3D sahne; kamera binadan şehre uzaklaşır, şantiyeye yakınlaşır. `prefers-reduced-motion` açıkken animasyonlar durur; WebGL yoksa metinler düz arka planla gösterilir. Sayfada Ekip, Büro ve Kurumsal planları (aylık/yıllık geçişli) ve demo talep formu vardır; talepler `.buros/leads.json` dosyasına yazılır. Fiyatlar örnek değerlerdir, `landing.html` içindeki `data-monthly` / `data-yearly` alanlarından değiştirilir.
+
+### Marka
+
+`brand/logo.svg` (koyu zemin), `brand/logo-ink.svg` (açık zemin), `brand/mark.svg` (yalnızca simge) ve `favicon.svg`. Uygulama ve tanıtım sayfası logoyu satır içi SVG olarak kullanır; renkler CSS'ten (`.logo-a`, `.logo-b`) gelir.
 
 ### Arayüz
 
 - Arama çubuğu üst çubukta; `Ctrl/⌘ + K` ile de açılır.
-- Genel bakış ekranında müşteri → şantiye → kayıt durumu akış diyagramı; düğümlere tıklayınca ilgili sayfa açılır.
+- Genel bakış: dört temel gösterge, önümüzdeki sekiz haftanın teslim yükü grafiği (geciken işler ayrı çubuk), yaklaşan teslimler, müşteri → şantiye → kayıt durumu akış diyagramı, şantiye listesi, finans özeti ve son hareketler. Grafik çubukları ve diyagram düğümleri ilgili sayfaya götürür.
+- Üst çubuk ve sayfa başlıkları her ekranda aynı ızgarayı kullanır; arama çubuğu her sayfada aynı konumdadır.
 - Proje ağacında müşteri ve şantiye blokları sürükleyerek (veya ↑ ↓ düğmeleriyle) sıralanır; yalnızca yönetici için.
 - Şantiye görselleri, şantiye kimliğinden türetilen kat planı çizimleridir (aks, duvar, kapı, pencere, ölçü çizgisi). Şantiye ilerledikçe mahaller sırayla taranır.
 - Şantiye sayfasının başında bir başlık görseli yer alır. Düzenleme izni olan kişi PNG/JPEG/WebP (en fazla 8 MB) yükleyebilir veya kaldırabilir. **Ayarlar → Büro bilgileri**'ndeki seçenek açıksa, görsel yüklenmemiş şantiyelerde kat planı çizimi gösterilir; kapalıysa başlık alanı gizlenir.
@@ -118,8 +123,8 @@ API atomik dosya yazımı, revision çakışma denetimi, kaynak kontrolü ve şe
 
 ## Dağıtım sınırı
 
-Bu, yerel tek-büro uygulamasıdır; gerçek kullanıcı ve kapsam izinleri vardır. Uzak ofis erişimi için HTTPS, kalıcı oturum altyapısı, veritabanı / yedekleme operasyonu ve dağıtım yapılandırması ayrıca hazırlanmalıdır. Sunucu hâlâ yalnızca localhost'ta dinler. Oturumlar bellekte tutulur. Müşteri portalı, e-posta doğrulama/parola sıfırlama, e-posta/WhatsApp gönderimi ve formüller yoktur.
+Uygulama çok kiracılı bir SaaS olarak tasarlanmıştır; ancak bu depo henüz üretim altyapısını içermez. Yayına almak için HTTPS, kalıcı oturum deposu, veritabanı, nesne depolama, ödeme ve e-posta altyapısı ayrıca hazırlanmalıdır. Sunucu şu an yalnızca localhost'ta dinler. Oturumlar bellekte tutulur. Müşteri portalı, e-posta doğrulama/parola sıfırlama, e-posta/WhatsApp gönderimi ve formüller yoktur.
 
 ## Kaynaklar
 
-`app.js` ekranlar ve etkileşimler; `model.mjs` veri modeli; `calendar.mjs` takvim sınır/geometri kuralları; `server.cjs` API; `auth.cjs` oturum/kullanıcılar; `access.cjs` rol ve kapsam denetimi; `style.css` tasarım sistemi. `fonts/` DM Sans ve Manrope dosyaları ile SIL OFL lisanslarını içerir.
+`app.js` ekranlar ve etkileşimler; `model.mjs` veri modeli; `calendar.mjs` takvim sınır/geometri kuralları; `server.cjs` API; `auth.cjs` hesaplar, çalışma alanları ve oturumlar; `access.cjs` rol ve kapsam denetimi; `style.css` tasarım sistemi; `brand/` logo dosyaları.

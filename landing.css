@@ -255,3 +255,50 @@ details{border-radius:0}
 .plans .btn-lime{background:none;color:var(--ink);border-color:var(--ink)}
 .plans .btn-lime:hover{background:var(--ink);color:#f3f3ee}
 .waitlist{background:none!important;border:0!important;border-top:1px solid var(--line-dark)!important;border-radius:0!important;box-shadow:none!important;padding:24px 0 0!important;backdrop-filter:none!important}
+
+/* Marka logosu */
+.logo{display:inline-flex;align-items:center}
+.brand-logo{display:block;height:30px;width:auto}
+.brand-logo .logo-a{fill:#f7f4e6;transition:fill .3s}.brand-logo .logo-b{fill:#adbe8e;transition:fill .3s}
+.topbar.light .brand-logo .logo-a{fill:#15211a}.topbar.light .brand-logo .logo-b{fill:#6e8a4e}
+.site-foot .brand-logo{height:28px}
+
+/* SaaS planları */
+.pricing-head{display:flex;align-items:flex-end;justify-content:space-between;gap:24px;flex-wrap:wrap}
+.billing{display:inline-flex;padding:3px;border:1px solid var(--line);border-radius:10px;background:#fbfbf7}
+.billing button{font:600 13px var(--sans);padding:9px 16px;border:0;border-radius:7px;background:none;color:var(--muted);cursor:pointer}
+.billing button[aria-pressed=true]{background:var(--ink);color:#f3f3ee}
+.billing button span{font-weight:500;opacity:.75;margin-left:4px}
+.plans{gap:16px;border-top:0;margin-top:40px}
+.plan,.plan+.plan{background:#fbfbf7;border:1px solid var(--line);border-radius:14px;padding:28px}
+.plan:last-child{border-right:1px solid var(--line)}
+.plan.featured{background:var(--night);color:var(--on-dark);border-color:var(--night)}
+.plan.featured .plan-note,.plan.featured .price small,.plan.featured .price-note{color:var(--on-dark-muted)}
+.plan.featured li:before{border-color:#adbe8e}
+.plan h3{font:700 20px var(--sans);letter-spacing:-.01em;margin:0}
+.plan.featured h3{color:#f7f4e6}
+.plan .plan-note{margin:6px 0 22px;min-height:52px}
+.price{display:flex;align-items:baseline;gap:8px;margin:0;font:400 44px/1 var(--serif)}
+.price small{font:500 13px var(--sans);color:var(--muted)}
+.price-note{margin:8px 0 22px;font-size:13px;color:var(--muted)}
+.plan .btn{width:100%;margin-bottom:24px}
+.plan ul{margin:0}
+.badge{color:#adbe8e;font:600 11px var(--mono);letter-spacing:.12em;text-transform:uppercase}
+.btn-outline{border:1px solid var(--ink);color:var(--ink);background:none}
+.btn-outline:hover{background:var(--ink);color:#f3f3ee}
+.plans-foot{margin:22px 0 0;font-size:13px;color:var(--muted);max-width:760px}
+@media(max-width:1000px){.plan,.plan+.plan{padding:24px}.plan .plan-note{min-height:0}}
+
+/* Demo formu */
+.waitlist{display:flex;flex-direction:column;gap:8px}
+.waitlist h3{font:600 18px var(--sans);color:#f7f4e6;margin:0 0 8px}
+.waitlist input,.waitlist select{width:100%;height:46px;padding:0 14px;border:1px solid var(--line-dark);background:rgba(255,255,255,.04);color:var(--on-dark);font:15px var(--sans);border-radius:2px}
+.waitlist .btn{margin-top:10px;align-self:flex-start}
+.plan{position:relative}
+.plan h3,.plan.featured h3{text-transform:none;letter-spacing:-.01em;font:700 20px var(--sans);color:var(--ink)}
+.plan.featured h3{color:#f7f4e6}
+.plan .badge{position:absolute;top:30px;right:28px;margin:0}
+.plan.featured .btn-lime{background:#f3f3ee;color:#101812;border-color:#f3f3ee}
+.plan.featured .btn-lime:hover{background:#fff}
+.final h2 em,.trust h2 em,.chapter em{color:#adbe8e}
+@media(max-width:1000px){.plan .badge{position:static;margin-bottom:10px}}
