@@ -1,6 +1,6 @@
 # BürOS — Büro ve Proje Operasyon Sistemi
 
-Türkçe proje operasyon uygulaması. Node.js 18+ dışında paket kurulumu gerektirmez; yazı tipleri dahil yerel çalışır.
+Türkçe proje operasyon uygulaması. Node.js 18+ dışında paket kurulumu gerektirmez. Yazı tipleri Google Fonts'tan yüklenir; bağlantı yoksa sistem fontlarına düşer.
 
 ## Başlatma
 
@@ -8,7 +8,22 @@ Türkçe proje operasyon uygulaması. Node.js 18+ dışında paket kurulumu gere
 npm start
 ```
 
-http://localhost:3000 adresini açın. İlk açılışta kendi yönetici hesabınızı ve en az 10 karakterlik parolanızı oluşturun. Mevcut çalışma alanı ve dosyalar korunur. Yönetici daha sonra **Ekip ve erişim** ekranından hesapları ve izinleri tanımlar. Varsayılan/parolası bilinen üretim hesabı yoktur.
+- `http://localhost:3000` → tanıtım sayfası (landing)
+- `http://localhost:3000/app` → uygulama (giriş yap / üye ol)
+
+İlk üye olan kişi yönetici olur ve örnek bir çalışma alanıyla başlar. Sonradan üye olanlar erişimi olmayan **Büro Personeli** olarak açılır; yönetici **Ekip ve erişim** ekranından rollerini ve müşteri/şantiye izinlerini verir. Yönetici de doğrudan hesap oluşturabilir. Varsayılan/parolası bilinen üretim hesabı yoktur.
+
+### Tanıtım sayfası
+
+`landing.html`, `landing.css`, `landing.js` ve `vendor/three.min.js` (Three.js r128, MIT). Kaydırmayla ilerleyen sinematik 3D sahne; kamera paftadan şehre uzaklaşır, şantiyeye yakınlaşır. `prefers-reduced-motion` açıkken animasyonlar durur; WebGL yoksa metinler düz arka planla gösterilir. Bekleme listesine bırakılan e-postalar `.buros/waitlist.json` dosyasına yazılır.
+
+### Arayüz
+
+- Arama çubuğu üst çubukta; `Ctrl/⌘ + K` ile de açılır.
+- Genel bakış ekranında müşteri → şantiye → kayıt durumu akış diyagramı; düğümlere tıklayınca ilgili sayfa açılır.
+- Proje ağacında müşteri ve şantiye blokları sürükleyerek (veya ↑ ↓ düğmeleriyle) sıralanır; yalnızca yönetici için.
+- Şantiye görselleri ilerlemeye göre kat kat yükselen izometrik binalardır; bina tamamlanana kadar yanında vinç durur.
+- **Ayarlar → Yazı tipi** bölümünden beş font seçeneği arasında geçiş yapılır (tarayıcıya kaydedilir). "Sistem" seçeneği internet bağlantısı gerektirmez.
 
 ### Demo hesabıyla hızlı başlangıç
 

@@ -5,7 +5,7 @@
   "scripts": {
     "start": "node server.cjs",
     "demo": "node demo.cjs",
-    "check": "node --check app.js && node --check server.cjs && node --check model.mjs && node --check auth.cjs && node --check access.cjs && node --check calendar.mjs && node --check demo.cjs",
+    "check": "node --check app.js && node --check server.cjs && node --check model.mjs && node --check auth.cjs && node --check access.cjs && node --check calendar.mjs && node --check demo.cjs && node --check landing.js",
     "test": "node --test tests/*.test.mjs"
   }
 }

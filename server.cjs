@@ -10,7 +10,7 @@ const statePath = path.join(ROOT, 'workspace.json');
 let state = fs.existsSync(statePath) ? JSON.parse(fs.readFileSync(statePath, 'utf8')) : null;
 if (state && !Array.isArray(state.finance)) state.finance = [];
 const auth=createAuth(ROOT);
-const publicFiles = {'/':'index.html','/index.html':'index.html','/app.js':'app.js','/model.mjs':'model.mjs','/calendar.mjs':'calendar.mjs','/style.css':'style.css','/favicon.svg':'favicon.svg'};
+const publicFiles = {'/':'landing.html','/landing.html':'landing.html','/landing.css':'landing.css','/landing.js':'landing.js','/vendor/three.min.js':'vendor/three.min.js','/app':'index.html','/index.html':'index.html','/app.js':'app.js','/model.mjs':'model.mjs','/calendar.mjs':'calendar.mjs','/style.css':'style.css','/favicon.svg':'favicon.svg'};
 const fontsDir=path.join(__dirname,'fonts');
 if(fs.existsSync(fontsDir))for(const name of fs.readdirSync(fontsDir))if(/^[a-zA-Z0-9_.-]+\.(ttf|css)$/.test(name))publicFiles['/fonts/'+name]='fonts/'+name;
 function json(res, code, body) { res.writeHead(code, {'Content-Type':'application/json; charset=utf-8','Cache-Control':'no-store'}); res.end(JSON.stringify(body)); }
@@ -38,6 +38,8 @@ const handler=async(req,res)=>{try{
  const url=new URL(req.url,`http://${host}`);
  if(url.pathname==='/api/session'&&req.method==='GET')return json(res,200,{setupRequired:auth.needsSetup(),user:auth.user(req)?auth.safe(auth.user(req)):null});
  if(url.pathname==='/api/setup'&&req.method==='POST')return json(res,201,auth.setup(JSON.parse((await body(req,16384)).toString()),res));
+ if(url.pathname==='/api/waitlist'&&req.method==='POST'){const v=JSON.parse((await body(req,2048)).toString());const email=String(v.email||'').trim().toLowerCase().slice(0,200),plan=['bulut','kurumsal'].includes(v.plan)?v.plan:'bulut';if(!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email))return json(res,400,{error:'Geçerli bir e-posta adresi yazın.'});const file=path.join(ROOT,'waitlist.json'),list=fs.existsSync(file)?JSON.parse(fs.readFileSync(file,'utf8')):[];if(list.length>=5000)return json(res,429,{error:'Liste şu an dolu.'});if(!list.some(x=>x.email===email&&x.plan===plan)){list.push({email,plan,at:new Date().toISOString()});fs.writeFileSync(file+'.tmp',JSON.stringify(list,null,2));fs.renameSync(file+'.tmp',file);}return json(res,201,{ok:true});}
+ if(url.pathname==='/api/signup'&&req.method==='POST')return json(res,201,auth.signup(JSON.parse((await body(req,16384)).toString()),res));
  if(url.pathname==='/api/login'&&req.method==='POST')return json(res,200,auth.login(JSON.parse((await body(req,16384)).toString()),req,res));
  if(url.pathname==='/api/logout'&&req.method==='POST'){auth.logout(req,res);return json(res,200,{ok:true});}
  const actor=auth.user(req);

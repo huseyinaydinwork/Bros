@@ -1,0 +1,258 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#101812">
+<meta name="description" content="bürOS, mimarlık ve mühendislik bürolarının şantiye evraklarını, iş akışlarını, takvimini ve finansını tek bir yerde toplar.">
+<title>bürOS — Şantiyeden evrağa, büronun tamamı</title>
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="landing.css">
+</head>
+<body>
+<a class="skip" href="#hikaye">İçeriğe geç</a>
+
+<header class="topbar" id="topbar">
+  <a class="logo" href="#" aria-label="bürOS ana sayfa">bür<span>OS</span></a>
+  <nav class="topnav" aria-label="Sayfa bölümleri">
+    <a href="#hikaye">Hikaye</a>
+    <a href="#ozellikler">Özellikler</a>
+    <a href="#fiyat">Fiyat</a>
+    <a href="#sss">SSS</a>
+  </nav>
+  <div class="topbar-cta">
+    <a class="link" data-app="login" href="app">Giriş yap</a>
+    <a class="btn btn-lime" data-app="signup" href="app#signup">Ücretsiz başla</a>
+  </div>
+</header>
+
+<main>
+  <!-- Sinematik hikaye: sabit 3D sahne, kaydırmayla kamera ve metin katmanları -->
+  <section class="story" id="hikaye" aria-label="bürOS hikayesi">
+    <div class="stage">
+      <canvas id="scene" aria-hidden="true"></canvas>
+      <div class="stage-fallback" aria-hidden="true"></div>
+      <div class="vignette" aria-hidden="true"></div>
+      <div class="grain" aria-hidden="true"></div>
+
+      <div class="chapter" data-from="0" data-to="0.15" data-first>
+        <p class="sheet" data-depth="1.4">PAFTA 01 · BAŞLANGIÇ · 1:100</p>
+        <h1 data-depth="1">Her yapı<br><em>bir evrakla</em> başlar.</h1>
+        <p class="lede" data-depth="0.6">Tapu, imar durumu, zemin etüdü, ruhsat. bürOS bir şantiyenin bütün evrakını, sürecini ve parasını tek bir yerde tutar.</p>
+        <div class="cta-row" data-depth="0.4">
+          <a class="btn btn-lime" data-app="signup" href="app#signup">Ücretsiz başla</a>
+          <a class="btn btn-ghost" href="#hikaye-2">Hikayeyi izle <span aria-hidden="true">↓</span></a>
+        </div>
+      </div>
+
+      <div class="chapter" id="hikaye-2" data-from="0.18" data-to="0.34">
+        <p class="sheet" data-depth="1.4">PAFTA 02 · İŞ AKIŞI</p>
+        <h2 data-depth="1">Evraktan projeye,<br><em>kat kat.</em></h2>
+        <p class="lede" data-depth="0.6">Her kayıt kendi iş akışıyla ilerler: bekleniyor, hazırlanıyor, başvuruda, teslim edildi. Bir evrak tamamlandığında şantiyenin ilerlemesi kendiliğinden güncellenir.</p>
+      </div>
+
+      <div class="chapter right" data-from="0.38" data-to="0.52">
+        <p class="sheet" data-depth="1.4">PAFTA 03 · SORUN</p>
+        <h2 data-depth="1">Bir büro,<br><em>onlarca şantiye.</em></h2>
+        <p class="lede" data-depth="0.6">Excel dosyaları, mesaj grupları, masadaki klasörler. Hangi evrakın nerede kaldığını bilen tek kişi izne çıktığında iş durur.</p>
+      </div>
+
+      <div class="chapter" data-from="0.55" data-to="0.68">
+        <p class="sheet" data-depth="1.4">PAFTA 04 · DÜZEN</p>
+        <h2 data-depth="1">Müşteriden şantiyeye,<br><em>şantiyeden kayda.</em></h2>
+        <p class="lede" data-depth="0.6">bürOS büronu bir ağaç gibi düzenler. Herkes yalnızca kendisine açılan müşteriyi ve şantiyeyi görür. Finans ayrı bir izinle korunur.</p>
+      </div>
+
+      <div class="chapter right" data-from="0.72" data-to="0.86">
+        <p class="sheet" data-depth="1.4">PAFTA 05 · ŞANTİYE</p>
+        <h2 data-depth="1">Geciken teslimi<br><em>önce sen gör.</em></h2>
+        <p class="lede" data-depth="0.6">Takvim ve bildirimler tarihi yaklaşan işleri öne çıkarır. Hakedişler ve giderler şantiyeye bağlı tutulur; net bakiye her an ortadadır.</p>
+      </div>
+
+      <div class="chapter center" data-from="0.9" data-to="1.01" data-last>
+        <p class="sheet" data-depth="1.4">PAFTA 06 · TESLİM</p>
+        <h2 data-depth="1">Büronun ritmi,<br><em>tek bir yerde.</em></h2>
+        <div class="cta-row" data-depth="0.5">
+          <a class="btn btn-lime" data-app="signup" href="app#signup">Büronu kur</a>
+          <a class="btn btn-ghost" href="#ozellikler">Özellikleri gör</a>
+        </div>
+      </div>
+
+      <ol class="rail" aria-hidden="true">
+        <li data-at="0">01<span>Başlangıç</span></li>
+        <li data-at="0.26">02<span>İş akışı</span></li>
+        <li data-at="0.45">03<span>Sorun</span></li>
+        <li data-at="0.61">04<span>Düzen</span></li>
+        <li data-at="0.79">05<span>Şantiye</span></li>
+        <li data-at="0.95">06<span>Teslim</span></li>
+      </ol>
+      <div class="scroll-hint" aria-hidden="true"><span></span>Kaydır</div>
+    </div>
+  </section>
+
+  <section class="band features" id="ozellikler">
+    <div class="wrap">
+      <header class="section-head">
+        <p class="kicker">Özellikler</p>
+        <h2>Bir şantiyenin <em>bütün hayatı</em>, tek bir çalışma alanında.</h2>
+      </header>
+      <div class="feature-grid">
+        <article class="feature f-tree" data-speed="0.05">
+          <div class="feature-art" aria-hidden="true">
+            <svg viewBox="0 0 280 150"><g class="ln"><path d="M40 75H90M90 35V115M90 35H150M90 75H150M90 115H150M150 35H190M150 115H190"/></g><rect x="14" y="62" width="30" height="26" rx="6" class="nd dark"/><g class="nd"><rect x="150" y="25" width="100" height="20" rx="5"/><rect x="150" y="65" width="80" height="20" rx="5"/><rect x="150" y="105" width="110" height="20" rx="5"/></g><g class="bar"><rect x="160" y="33" width="46" height="4" rx="2"/><rect x="160" y="73" width="22" height="4" rx="2"/><rect x="160" y="113" width="70" height="4" rx="2"/></g></svg>
+          </div>
+          <h3>Proje ağacı</h3>
+          <p>Müşteri, şantiye, bölüm ve kayıt. Sürükleyerek sırala, bir tıkla evrakına in.</p>
+        </article>
+        <article class="feature" data-speed="-0.04">
+          <div class="feature-art" aria-hidden="true">
+            <svg viewBox="0 0 280 150"><g class="flowl"><path d="M30 40C120 40 120 70 250 70"/><path d="M30 75C120 75 120 105 250 105" class="warm"/><path d="M30 110C120 110 120 40 250 40" class="blue"/></g><g class="nd"><rect x="18" y="30" width="10" height="92" rx="3" class="dark"/><rect x="250" y="30" width="10" height="20" rx="3"/><rect x="250" y="60" width="10" height="20" rx="3" class="blue"/><rect x="250" y="95" width="10" height="20" rx="3" class="warm"/></g></svg>
+          </div>
+          <h3>Özelleştirilebilir iş akışları</h3>
+          <p>Durumları, ilerleme oranlarını ve renkleri büron belirler. Şablondan yeni şantiye birkaç saniyede açılır.</p>
+        </article>
+        <article class="feature" data-speed="0.07">
+          <div class="feature-art" aria-hidden="true">
+            <svg viewBox="0 0 280 150"><g class="cal"><rect x="20" y="18" width="240" height="116" rx="8"/><path d="M20 44H260M54 44V134M88 44V134M122 44V134M156 44V134M190 44V134M224 44V134M20 74H260M20 104H260"/></g><rect x="92" y="80" width="26" height="8" rx="2" class="chip warm"/><rect x="160" y="50" width="26" height="8" rx="2" class="chip"/><rect x="194" y="110" width="26" height="8" rx="2" class="chip blue"/></svg>
+          </div>
+          <h3>Takvim ve bildirimler</h3>
+          <p>Aylar arasında kaydırarak gez, yakınlaş. Geciken ve yarın teslim edilecek işler bildirimde toplanır.</p>
+        </article>
+        <article class="feature" data-speed="-0.06">
+          <div class="feature-art" aria-hidden="true">
+            <svg viewBox="0 0 280 150"><g class="fin"><text x="22" y="50">+ ₺330.000</text><text x="22" y="86" class="warm">− ₺45.000</text><text x="22" y="124" class="big">₺285.000</text></g><path d="M170 118 200 96 222 104 256 60" class="spark"/><circle cx="256" cy="60" r="4" class="dot"/></svg>
+          </div>
+          <h3>Finans</h3>
+          <p>Hakediş, avans, taşeron ödemesi. Her hareket şantiyeye bağlı; özet müşteri sayfasında da görünür.</p>
+        </article>
+        <article class="feature" data-speed="0.04">
+          <div class="feature-art" aria-hidden="true">
+            <svg viewBox="0 0 280 150"><g class="role"><rect x="20" y="30" width="72" height="90" rx="8" class="dark"/><rect x="104" y="30" width="72" height="90" rx="8"/><rect x="188" y="30" width="72" height="90" rx="8"/></g><g class="roletext"><text x="34" y="60" class="lime">01</text><text x="118" y="60">02</text><text x="202" y="60">03</text></g></svg>
+          </div>
+          <h3>Rol ve kapsam bazlı erişim</h3>
+          <p>Yönetici, proje sorumlusu, büro personeli. İzinler müşteri veya şantiye bazında verilir ve sunucuda denetlenir.</p>
+        </article>
+        <article class="feature" data-speed="-0.03">
+          <div class="feature-art" aria-hidden="true">
+            <svg viewBox="0 0 280 150"><g class="files"><rect x="40" y="36" width="70" height="88" rx="6"/><rect x="104" y="26" width="70" height="88" rx="6"/><rect x="168" y="16" width="70" height="88" rx="6" class="front"/></g><text x="182" y="48" class="ftext">DWG</text><text x="182" y="66" class="fsub">v3 · güncel</text></svg>
+          </div>
+          <h3>Dosyalar ve sürümler</h3>
+          <p>PDF, DWG, görsel. Aynı adla yüklenen dosya eskisini silmez, yeni sürüm olarak saklanır.</p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <section class="band steps">
+    <div class="wrap">
+      <header class="section-head">
+        <p class="kicker">Nasıl başlarsın</p>
+        <h2>Üç adımda <em>çalışır durumda.</em></h2>
+      </header>
+      <ol class="step-list">
+        <li data-speed="0.03"><span class="step-no">1</span><h3>Büronu kur</h3><p>İlk hesap yönetici olur ve örnek bir çalışma alanıyla açılır. Kurulum tek komut: <code>npm start</code>.</p></li>
+        <li data-speed="-0.02"><span class="step-no">2</span><h3>Şantiyelerini ekle</h3><p>Standart yapı ruhsatı veya iç mimari şablonundan başla, bölümleri ve evrakları büronun düzenine göre değiştir.</p></li>
+        <li data-speed="0.05"><span class="step-no">3</span><h3>Ekibini davet et</h3><p>Ekip arkadaşların üye olur; sen her birine hangi müşteri ve şantiyeyi, finansı görüp göremeyeceğini seçersin.</p></li>
+      </ol>
+    </div>
+  </section>
+
+  <section class="band trust">
+    <div class="wrap trust-grid">
+      <div>
+        <p class="kicker">Güven</p>
+        <h2>Veriler <em>senin bilgisayarında.</em></h2>
+        <p class="body">bürOS yerel çalışır. Çalışma alanı ve dosyalar büronun kendi diskinde durur; bir bulut hizmetine gönderilmez.</p>
+      </div>
+      <ul class="facts">
+        <li><b>scrypt</b><span>Parolalar özetlenerek saklanır, düz metin tutulmaz.</span></li>
+        <li><b>Sunucu denetimi</b><span>Görüntüleme ve düzenleme izinleri arayüzde değil sunucuda kontrol edilir.</span></li>
+        <li><b>25 MB</b><span>Dosya başına sınır; önceki sürümler silinmez.</span></li>
+        <li><b>JSON yedek</b><span>Yönetici çalışma alanını tek dosya olarak dışa ve içe aktarır.</span></li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="band pricing" id="fiyat">
+    <div class="wrap">
+      <header class="section-head">
+        <p class="kicker">Fiyat</p>
+        <h2>Bugün ücretsiz başla, <em>büyüdükçe genişlet.</em></h2>
+      </header>
+      <div class="plans">
+        <article class="plan">
+          <h3>Yerel</h3>
+          <p class="price">Ücretsiz</p>
+          <p class="plan-note">Kendi bilgisayarında ya da ofis sunucunda.</p>
+          <ul><li>Sınırsız müşteri ve şantiye</li><li>Sınırsız ekip üyesi</li><li>İş akışları, şablonlar, takvim</li><li>Finans ve kapsamlı erişim</li></ul>
+          <a class="btn btn-dark" data-app="signup" href="app#signup">Ücretsiz başla</a>
+        </article>
+        <article class="plan featured">
+          <p class="badge">Yakında</p>
+          <h3>Bulut</h3>
+          <p class="price">Bekleme listesi</p>
+          <p class="plan-note">Şantiyeden, telefondan, evden erişim.</p>
+          <ul><li>Yerel sürümdeki her şey</li><li>HTTPS ve uzaktan erişim</li><li>Otomatik yedekleme</li><li>E-posta bildirimleri</li></ul>
+          <a class="btn btn-lime" href="#bekleme">Listeye katıl</a>
+        </article>
+        <article class="plan">
+          <h3>Kurumsal</h3>
+          <p class="price">Görüşelim</p>
+          <p class="plan-note">Birden fazla ofis ve özel kurulum.</p>
+          <ul><li>Kurulum ve veri taşıma desteği</li><li>Mevcut Excel kayıtlarının aktarımı</li><li>Büroya özel şablon ve akışlar</li><li>Eğitim</li></ul>
+          <a class="btn btn-dark" href="#bekleme" data-interest="kurumsal">Görüşme iste</a>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <section class="band faq" id="sss">
+    <div class="wrap faq-grid">
+      <header class="section-head">
+        <p class="kicker">SSS</p>
+        <h2>Aklına <em>takılanlar.</em></h2>
+      </header>
+      <div class="faq-list">
+        <details><summary>Kurulum ne kadar sürer?</summary><p>Node.js 18 veya üstü yüklü bir bilgisayarda projeyi indirip <code>npm start</code> çalıştırman yeterli. Ek paket kurulmaz.</p></details>
+        <details><summary>Verilerim nerede saklanıyor?</summary><p>Çalışma alanı, hesaplar ve dosyalar bürOS'un kurulu olduğu bilgisayardaki <code>.buros</code> klasöründe tutulur.</p></details>
+        <details><summary>Ekip üyelerim her şeyi görebilir mi?</summary><p>Hayır. Yönetici her kişiye müşteri veya şantiye bazında görüntüleme ya da düzenleme izni verir. Finans hareketleri ayrı bir izinle açılır.</p></details>
+        <details><summary>Telefondan kullanabilir miyim?</summary><p>Arayüz telefona uyumludur. Yerel sürüm yalnızca kurulu olduğu bilgisayardan erişilebilir; uzaktan erişim Bulut planıyla gelecek.</p></details>
+        <details><summary>Mevcut Excel kayıtlarımı taşıyabilir miyim?</summary><p>Kurumsal planda aktarımı birlikte yapıyoruz. Yerel sürümde kayıtlar şablondan açılan şantiyelere elle eklenir.</p></details>
+      </div>
+    </div>
+  </section>
+
+  <section class="band final" id="bekleme">
+    <div class="wrap final-grid">
+      <div>
+        <h2>Büronu <em>bugün</em> düzene sok.</h2>
+        <p class="body">Yerel sürüm hemen kullanılabilir. Bulut sürümü hazır olduğunda haber almak için e-postanı bırak.</p>
+        <a class="btn btn-lime" data-app="signup" href="app#signup">Ücretsiz başla</a>
+      </div>
+      <form class="waitlist" id="waitlist" novalidate>
+        <label for="wl-email">E-posta</label>
+        <div class="waitlist-row">
+          <input id="wl-email" name="email" type="email" required autocomplete="email" placeholder="ad@buro.com">
+          <button class="btn btn-lime" type="submit">Haber ver</button>
+        </div>
+        <label for="wl-plan">İlgilendiğin plan</label>
+        <select id="wl-plan" name="plan"><option value="bulut">Bulut</option><option value="kurumsal">Kurumsal</option></select>
+        <p class="waitlist-msg" id="wl-msg" role="status"></p>
+      </form>
+    </div>
+  </section>
+</main>
+
+<footer class="site-foot">
+  <a class="logo" href="#">bür<span>OS</span></a>
+  <span>Mimarlık ve mühendislik büroları için proje, evrak ve finans yönetimi.</span>
+  <span>© 2026</span>
+</footer>
+
+<script src="vendor/three.min.js"></script>
+<script src="landing.js"></script>
+</body>
+</html>
