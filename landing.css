@@ -302,3 +302,17 @@ details{border-radius:0}
 .plan.featured .btn-lime:hover{background:#fff}
 .final h2 em,.trust h2 em,.chapter em{color:#adbe8e}
 @media(max-width:1000px){.plan .badge{position:static;margin-bottom:10px}}
+
+/* Footer: kaydırdıkça belirginleşen silüet */
+.site-foot{position:relative;overflow:hidden;grid-template-columns:2fr 1fr 1fr 1fr;padding-bottom:calc(270px + env(safe-area-inset-bottom,0px));--reveal:0}
+.site-foot>*:not(.foot-art){position:relative;z-index:1}
+.foot-art{position:absolute;left:0;right:0;bottom:0;width:100%;height:250px;pointer-events:none;opacity:calc(.12 + var(--reveal)*.88);transform:translate3d(0,calc((1 - var(--reveal))*90px),0) scale(calc(1.06 - var(--reveal)*.06));transform-origin:50% 100%;transition:opacity .2s linear}
+.foot-art path{fill:none;stroke-width:5;stroke-linejoin:miter}
+.foot-art .fa-line{stroke:#f7f4e6;opacity:.16}
+.foot-art .fa-line.thin{stroke-width:4}
+.foot-art .fa-accent{stroke:#adbe8e;opacity:.55}
+.foot-art .fa-ground{stroke:#adbe8e;stroke-width:2;opacity:.35}
+.site-foot::after{content:'';position:absolute;inset:0;background:linear-gradient(180deg,var(--night) 30%,transparent 75%);pointer-events:none;z-index:0}
+.foot-legal{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
+@media(max-width:1000px){.site-foot{grid-template-columns:1fr 1fr;padding-bottom:180px}.foot-art{height:220px}}
+@media(prefers-reduced-motion:reduce){.site-foot{--reveal:1}}

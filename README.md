@@ -11,6 +11,16 @@ npm start
 - `http://localhost:3000` → tanıtım sayfası (landing)
 - `http://localhost:3000/app` → uygulama (giriş yap / üye ol)
 
+### Kayıt, kurulum ve deneme süresi
+
+Kayıt formunda ad, iş e-postası ve parola zorunludur; telefon, unvan ve “bizi nereden duydunuz” isteğe bağlıdır. KVKK aydınlatma metninin onayı zorunlu, pazarlama e-postası izni isteğe bağlıdır (varsayılan kapalı). Kayıttan sonra üç adımlı kurulum açılır:
+
+1. **Başlangıç:** yeni çalışma alanı kur ya da davet koduyla katıl.
+2. **Şirket bilgileri:** firma adı, faaliyet alanı, ekip büyüklüğü, eşzamanlı proje sayısı, şehir, telefon, web sitesi. “Örnek verilerle başla” varsayılan olarak kapalıdır.
+3. **Ekibini davet et:** e-posta adresi ve rol girilir; her kişiye davet bağlantısı içeren e-posta gider. Bağlantıyı açan kişi hesabını oluşturur ya da giriş yapar ve davet otomatik kabul edilir (davet yalnızca gönderildiği e-posta adresiyle kabul edilebilir, 14 gün geçerlidir).
+
+Her yeni çalışma alanı **14 günlük deneme** ile başlar. Kenar çubuğunda kalan gün görünür. Deneme bitince çalışma alanı **salt okunur** olur: kayıtlar silinmez, okunabilir; sunucu yazma isteklerini `402` ile reddeder. Yönetici **Ayarlar → Plan ve faturalama** ekranından plan talep eder (talep platform yönetimine düşer); plan platform yönetim panelinden etkinleştirilir. Online ödeme henüz bağlı değildir.
+
 ### Hesaplar ve çalışma alanları
 
 Herkes e-posta adresi ve parolayla üye olur. Hesap açıldıktan sonra kişi ya **yeni bir çalışma alanı kurar** (alanın yöneticisi olur, isterse örnek verilerle başlar) ya da **davet koduyla mevcut bir alana katılır**. Davet koduyla katılan kişi **Büro Personeli** rolüyle ve hiçbir erişimi olmadan başlar; yönetici **Ekip ve erişim** ekranından rolünü ve müşteri/şantiye izinlerini verir. Yönetici ekibe e-posta adresiyle doğrudan da kişi ekleyebilir: o e-postayla hesap varsa kişi kendi hesabıyla eklenir, yoksa belirlenen ilk parolayla hesap açılır.
@@ -20,6 +30,23 @@ Bir hesap birden fazla çalışma alanına üye olabilir; kenar çubuğundaki al
 ### Tanıtım sayfası
 
 `landing.html`, `landing.css`, `landing.js` ve `vendor/three.min.js` (Three.js r128, MIT). Kaydırmayla ilerleyen 3D sahne; kamera binadan şehre uzaklaşır, şantiyeye yakınlaşır. `prefers-reduced-motion` açıkken animasyonlar durur; WebGL yoksa metinler düz arka planla gösterilir. Sayfada Ekip, Büro ve Kurumsal planları (aylık/yıllık geçişli) ve demo talep formu vardır; talepler `.buros/leads.json` dosyasına yazılır. Fiyatlar örnek değerlerdir, `landing.html` içindeki `data-monthly` / `data-yearly` alanlarından değiştirilir.
+
+### Platform yönetim paneli
+
+`/admin` adresi yalnızca platform yöneticilerine açıktır (`demo@buros.local` hesabı ve `BUROS_PLATFORM_ADMINS=eposta1,eposta2` ortam değişkeninde yazan hesaplar):
+
+- **Genel bakış:** kullanıcı, aktif kullanıcı, pazarlama izni, çalışma alanı ve plan sayıları; son 30 günün kayıt grafiği; son talepler.
+- **Kullanıcılar:** kayıt bilgileri, izin durumu, son giriş, üyelikler; arama, filtre, hesap pasifleştirme ve CSV dışa aktarma.
+- **Şirketler:** firma profili, sahip, üye ve proje sayısı, plan ve deneme durumu; plan değiştirme ve denemeyi uzatma.
+- **Kampanyalar:** hedef kitle seçerek (tüm izinliler, yöneticiler, denemesi süren/biten, ücretli, alan kurmayanlar, pasif kullanıcılar) kişiselleştirilmiş e-posta gönderme ve önizleme.
+- **Otomasyonlar:** hoş geldin, çalışma alanı kuruldu, ekip daveti, deneme bitiyor (3 gün kala), deneme sona erdi, 14 gündür giriş yapmayanlar. Her biri açılıp kapatılabilir, konusu ve metni düzenlenebilir. Zamanlı kurallar saatte bir çalışır; aynı kişiye aynı e-posta bir kez gider.
+- **E-posta kutusu** ve **Talepler** (landing demo talepleri, uygulama içi plan talepleri).
+
+Pazarlama e-postaları yalnızca izin veren kişilere gider ve her birinde abonelikten çıkma bağlantısı (`/abonelik?t=…`) bulunur. Tüm e-postalar `.buros/outbox.json` dosyasına yazılır. `RESEND_API_KEY` (ve isteğe bağlı `MAIL_FROM`) tanımlanırsa e-postalar Resend üzerinden gerçekten gönderilir. E-postalardaki bağlantılar için `BUROS_PUBLIC_URL` tanımlayın.
+
+### Yasal sayfa
+
+`/hukuki.html`: KVKK aydınlatma metni, gizlilik politikası, çerez politikası ve kullanım koşulları. Metinler taslaktır; köşeli parantezli alanlar şirket bilgileriyle doldurulmalı ve yayından önce hukuk danışmanı tarafından gözden geçirilmelidir.
 
 ### Marka
 
@@ -31,10 +58,13 @@ Bir hesap birden fazla çalışma alanına üye olabilir; kenar çubuğundaki al
 - Genel bakış: dört temel gösterge, önümüzdeki sekiz haftanın teslim yükü grafiği (geciken işler ayrı çubuk), yaklaşan teslimler, müşteri → şantiye → kayıt durumu akış diyagramı, şantiye listesi, finans özeti ve son hareketler. Grafik çubukları ve diyagram düğümleri ilgili sayfaya götürür.
 - Üst çubuk ve sayfa başlıkları her ekranda aynı ızgarayı kullanır; arama çubuğu her sayfada aynı konumdadır.
 - Proje ağacında müşteri ve şantiye blokları sürükleyerek (veya ↑ ↓ düğmeleriyle) sıralanır; yalnızca yönetici için.
-- Şantiye görselleri, şantiye kimliğinden türetilen kat planı çizimleridir (aks, duvar, kapı, pencere, ölçü çizgisi). Şantiye ilerledikçe mahaller sırayla taranır.
+- Şantiye görselleri logonun dilinde çizilir: eğik çatılı, kalın çizgili bina silüetleri ve bir vurgu binası; zemin çizgisi şantiyenin ilerlemesini gösterir. Her şantiyenin görseli kimliğinden türetildiği için sabittir.
 - Şantiye sayfasının başında bir başlık görseli yer alır. Düzenleme izni olan kişi PNG/JPEG/WebP (en fazla 8 MB) yükleyebilir veya kaldırabilir. **Ayarlar → Büro bilgileri**'ndeki seçenek açıksa, görsel yüklenmemiş şantiyelerde kat planı çizimi gösterilir; kapalıysa başlık alanı gizlenir.
 - Durumlar renkli etiket ya da nokta yerine düz metinle gösterilir; geciken işler yalnızca metin rengiyle ayrılır.
-- **Ayarlar → Yazı tipi** bölümünden beş font seçeneği arasında geçiş yapılır (tarayıcıya kaydedilir). "Sistem" seçeneği internet bağlantısı gerektirmez.
+- Kenar çubuğu daraltılabilir (yalnızca simgeler). Çalışma alanı adına tıklayınca alanlar arasında geçiş, yeni alan oluşturma ve davet koduyla katılma menüsü açılır. Sol alttaki profil menüsü hesap, büro ayarları, plan, tema ve oturum kapatmayı tek yerde toplar.
+- **Ayarlar** sekmeleri: Profil (ad, telefon, unvan, parola), Görünüm (Orman / Kağıt / Gece temaları, tablo yoğunluğu, kenar çubuğu, açılış sayfası, yazı tipi), Çalışma alanı (şirket bilgileri, para birimi, yaklaşan teslim uyarısı, varsayılan şablon, varsayılan şantiye görseli, yedekleme), Plan ve faturalama, Bildirimler (haftalık özet, geciken iş, pazarlama izni). Görünüm tercihleri tarayıcıda, çalışma tercihleri çalışma alanında saklanır.
+- Şablon düzenleyici: numaralı bölüm kartları, bölüm bazında ağırlık ve iş akışı, kayıtları tek tek ekleme/kaldırma (Enter ile hızlı ekleme) ve bölüm ağırlıklarının yüzde dağılımını gösteren özet paneli.
+- Üst çubuktaki kayıt göstergesi kaydediliyor / kaydedildi / hata / salt okunur durumlarını ayrı gösterir.
 
 ### Demo hesabıyla hızlı başlangıç
 
@@ -110,8 +140,9 @@ Dosyalar bir kayda (kayıt çekmecesi) ya da doğrudan şantiyeye (şantiye sayf
 
 ## Veriler ve yedekleme
 
-- `.buros/accounts.json`: hesaplar (e-posta, ad, parola özeti)
-- `.buros/spaces.json`: çalışma alanları, davet kodları, üyelikler, roller ve izinler
+- `.buros/accounts.json`: hesaplar (e-posta, ad, parola özeti, telefon, unvan, kaynak, izinler, son giriş)
+- `.buros/spaces.json`: çalışma alanları, şirket profili, plan ve deneme bitişi, davet kodları, e-posta davetleri, üyelikler, roller ve izinler
+- `.buros/outbox.json`, `.buros/automations.json`, `.buros/leads.json`: e-posta kaydı, otomasyon ayarları ve gönderim günlüğü, demo ve plan talepleri
 - `.buros/spaces/<alan-id>/workspace.json`: o alanın kayıtları ve dosya referansları
 - `.buros/spaces/<alan-id>/files/`: o alanın dosyaları ve metaverileri
 
@@ -127,4 +158,4 @@ Uygulama çok kiracılı bir SaaS olarak tasarlanmıştır; ancak bu depo henüz
 
 ## Kaynaklar
 
-`app.js` ekranlar ve etkileşimler; `model.mjs` veri modeli; `calendar.mjs` takvim sınır/geometri kuralları; `server.cjs` API; `auth.cjs` hesaplar, çalışma alanları ve oturumlar; `access.cjs` rol ve kapsam denetimi; `style.css` tasarım sistemi; `brand/` logo dosyaları.
+`app.js` ekranlar ve etkileşimler; `admin.html`/`admin.js` platform yönetim paneli; `mailer.cjs` e-posta kuyruğu ve gönderimi; `automations.cjs` otomasyon ve kampanyalar; `legal.html` yasal metinler; `model.mjs` veri modeli; `calendar.mjs` takvim sınır/geometri kuralları; `server.cjs` API; `auth.cjs` hesaplar, çalışma alanları ve oturumlar; `access.cjs` rol ve kapsam denetimi; `style.css` tasarım sistemi; `brand/` logo dosyaları.

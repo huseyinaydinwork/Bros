@@ -37,7 +37,9 @@
     if (hint) hint.style.opacity = p > .03 ? 0 : 1;
   }
 
+  const foot = document.getElementById('siteFoot');
   function updatePage() {
+    if (foot) { const r = foot.getBoundingClientRect(); foot.style.setProperty('--reveal', clamp((innerHeight - r.top) / Math.max(1, r.height)).toFixed(3)); }
     topbar.classList.toggle('scrolled', scrollY > 20);
     topbar.classList.toggle('light', lightBands.some(b => { const r = b.getBoundingClientRect(); return r.top <= 40 && r.bottom >= 40; }));
     if (reduce) return;
