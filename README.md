@@ -1,12 +1,27 @@
 # BürOS — Büro ve Proje Operasyon Sistemi
 
-Mimarlık ve mühendislik büroları için çok kiracılı (SaaS) proje, evrak ve finans yönetim platformu. Node.js 18+ dışında paket kurulumu gerektirmez. Yazı tipleri Google Fonts'tan yüklenir; bağlantı yoksa sistem fontlarına düşer.
+Mimarlık ve mühendislik büroları için çok kiracılı (SaaS) proje, evrak ve finans yönetim platformu. Node.js 22 gerekir; tek bağımlılık PostgreSQL sürücüsü `pg`'dir (`npm install`). Yazı tipleri Google Fonts'tan yüklenir; bağlantı yoksa sistem fontlarına düşer.
 
 ## Başlatma
 
 ```sh
+npm install
 npm start
 ```
+
+Yayına alma (Docker, PostgreSQL, otomatik HTTPS, yedekleme) için **[DEPLOY.md](DEPLOY.md)**.
+
+### Veri saklama
+
+- `DATABASE_URL` tanımlıysa tüm kayıtlar PostgreSQL'e yazılır (`buros_records`, `buros_workspaces` tabloları açılışta oluşturulur). Tanımlı değilse `BUROS_DATA_DIR` (varsayılan `.buros/`) altındaki JSON dosyalarına yazılır; bu mod yalnızca geliştirme içindir.
+- Yüklenen dosyalar `S3_BUCKET` tanımlıysa S3 uyumlu depoya, değilse veri klasörüne gider.
+- Oturumlar kalıcıdır (token özeti saklanır), sunucu yeniden başlasa da kullanıcılar oturumda kalır. Süre `SESSION_HOURS` (varsayılan 168).
+- Yazma başarısız olursa istek 500 ile döner; `/healthz` depolama durumunu raporlar.
+- Dosya kurulumundan PostgreSQL'e geçiş: `node scripts/migrate-to-postgres.cjs`.
+
+### Parola sıfırlama ve e-posta doğrulama
+
+Giriş ekranındaki “Parolamı unuttum” bağlantısı bir saat geçerli sıfırlama bağlantısı gönderir; parola değişince tüm oturumlar kapanır. Yeni hesaplara doğrulama e-postası gider, doğrulanmamış hesaplarda uygulamanın üstünde yeniden gönderme seçeneği olan bir uyarı görünür. Davet bağlantısıyla gelen hesaplar doğrulanmış sayılır.
 
 - `http://localhost:3000` → tanıtım sayfası (landing)
 - `http://localhost:3000/app` → uygulama (giriş yap / üye ol)
@@ -29,11 +44,11 @@ Bir hesap birden fazla çalışma alanına üye olabilir; kenar çubuğundaki al
 
 ### Tanıtım sayfası
 
-`landing.html`, `landing.css`, `landing.js` ve `vendor/three.min.js` (Three.js r128, MIT). Kaydırmayla ilerleyen 3D sahne; kamera binadan şehre uzaklaşır, şantiyeye yakınlaşır. `prefers-reduced-motion` açıkken animasyonlar durur; WebGL yoksa metinler düz arka planla gösterilir. Sayfada Ekip, Büro ve Kurumsal planları (aylık/yıllık geçişli) ve demo talep formu vardır; talepler `.buros/leads.json` dosyasına yazılır. Fiyatlar örnek değerlerdir, `landing.html` içindeki `data-monthly` / `data-yearly` alanlarından değiştirilir.
+`landing.html`, `landing.css`, `landing.js` ve `vendor/three.min.js` (Three.js r128, MIT). Kaydırmayla ilerleyen 3D sahne; kamera binadan şehre uzaklaşır, şantiyeye yakınlaşır. `prefers-reduced-motion` açıkken animasyonlar durur; WebGL yoksa metinler düz arka planla gösterilir. Sayfada Ekip, Büro ve Kurumsal planları (aylık/yıllık geçişli) ve demo talep formu vardır; talepler veritabanına yazılır ve yönetim panelinde görünür. Fiyatlar örnek değerlerdir, `landing.html` içindeki `data-monthly` / `data-yearly` alanlarından değiştirilir.
 
 ### Platform yönetim paneli
 
-`/admin` adresi yalnızca platform yöneticilerine açıktır (`demo@buros.local` hesabı ve `BUROS_PLATFORM_ADMINS=eposta1,eposta2` ortam değişkeninde yazan hesaplar):
+`/admin` adresi yalnızca platform yöneticilerine açıktır (`BUROS_PLATFORM_ADMINS=eposta1,eposta2` ortam değişkeninde yazan hesaplar; yerelde ayrıca `npm run demo` hesabı):
 
 - **Genel bakış:** kullanıcı, aktif kullanıcı, pazarlama izni, çalışma alanı ve plan sayıları; son 30 günün kayıt grafiği; son talepler.
 - **Kullanıcılar:** kayıt bilgileri, izin durumu, son giriş, üyelikler; arama, filtre, hesap pasifleştirme ve CSV dışa aktarma.
@@ -42,7 +57,7 @@ Bir hesap birden fazla çalışma alanına üye olabilir; kenar çubuğundaki al
 - **Otomasyonlar:** hoş geldin, çalışma alanı kuruldu, ekip daveti, deneme bitiyor (3 gün kala), deneme sona erdi, 14 gündür giriş yapmayanlar. Her biri açılıp kapatılabilir, konusu ve metni düzenlenebilir. Zamanlı kurallar saatte bir çalışır; aynı kişiye aynı e-posta bir kez gider.
 - **E-posta kutusu** ve **Talepler** (landing demo talepleri, uygulama içi plan talepleri).
 
-Pazarlama e-postaları yalnızca izin veren kişilere gider ve her birinde abonelikten çıkma bağlantısı (`/abonelik?t=…`) bulunur. Tüm e-postalar `.buros/outbox.json` dosyasına yazılır. `RESEND_API_KEY` (ve isteğe bağlı `MAIL_FROM`) tanımlanırsa e-postalar Resend üzerinden gerçekten gönderilir. E-postalardaki bağlantılar için `BUROS_PUBLIC_URL` tanımlayın.
+Pazarlama e-postaları yalnızca izin veren kişilere gider ve her birinde abonelikten çıkma bağlantısı (`/abonelik?t=…`) bulunur. Tüm e-postalar e-posta kutusuna kaydedilir. `SMTP_HOST` (ve `SMTP_USER`, `SMTP_PASS`, `SMTP_PORT`) veya `RESEND_API_KEY` tanımlanırsa gerçekten gönderilir; ikisi de yoksa yalnızca kaydedilir. Gönderen adresi `MAIL_FROM` ile belirlenir. E-postalardaki bağlantılar için `BUROS_PUBLIC_URL` tanımlayın.
 
 ### Yasal sayfa
 
@@ -72,7 +87,7 @@ Pazarlama e-postaları yalnızca izin veren kişilere gider ve her birinde abone
 npm run demo
 ```
 
-Bu komut `demo@buros.local` / `demo123456` bilgileriyle bir hesap ve yöneticisi olduğu **Demo Mimarlık** çalışma alanını oluşturur (hesap zaten varsa parolasını bu değere sıfırlar), alan boşsa örnek verileri yükler, davet kodunu yazdırır ve sunucuyu başlatır. Parolanızı unuttuğunuzda da bu komutla yeniden giriş yapabilirsiniz. Bilinen bir parola tanımladığı için yalnızca yerel deneme amacıyla kullanın.
+Bu komut `demo@buros.local` / `demo123456` bilgileriyle bir hesap ve yöneticisi olduğu **Demo Mimarlık** çalışma alanını oluşturur (hesap zaten varsa parolasını bu değere sıfırlar), alan boşsa örnek verileri yükler, davet kodunu yazdırır ve sunucuyu başlatır. Parolanızı unuttuğunuzda da bu komutla yeniden giriş yapabilirsiniz. Bilinen bir parola tanımladığı için yalnızca yerel deneme amacıyla kullanın; `NODE_ENV=production` iken çalışmayı reddeder.
 
 ```sh
 npm run check

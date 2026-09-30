@@ -33,17 +33,21 @@ function migrateLegacy(root){
  write(path.join(root,'spaces.json'),[{id,name:state?.settings?.name||'Büro',createdAt:now,invite:{code:inviteCode(),enabled:true},members:users.map(u=>({userId:u.id,role:u.role,grants:u.grants||[],disabled:!!u.disabled,joinedAt:now}))}]);
  fs.renameSync(usersFile,usersFile+'.migrated');
 }
-function createAuth(root,{emit=()=>{},publicUrl=()=>''}={}){
- migrateLegacy(root);
- const accountsFile=path.join(root,'accounts.json'),spacesFile=path.join(root,'spaces.json');
- let accounts=read(accountsFile,[]),spaces=read(spacesFile,[]);
+function createAuth(storage,{emit=()=>{},publicUrl=()=>''}={}){
+ const accounts=storage.collection('accounts'),spaces=storage.collection('spaces'),sessionRows=storage.collection('sessions');
  const now=()=>new Date().toISOString();
  // Older records predate the trial, profile and consent fields.
  for(const a of accounts){a.prefs??={weeklyDigest:true,overdueEmails:true};a.unsubToken??=token();a.createdAt??=now();a.marketingConsent??=false;}
+ for(const a of accounts)if(a.emailVerifiedAt===undefined)a.emailVerifiedAt=a.createdAt;// accounts from before verification existed count as verified
  for(const s of spaces){s.plan??='trial';s.trialEndsAt??=new Date(Date.now()+TRIAL_DAYS*DAY).toISOString();s.invitations??=[];s.profile??={};s.createdAt??=now();s.createdBy??=s.members.find(m=>m.role==='admin')?.userId||null;}
- const sessions=new Map(),attempts=new Map();
- const saveAccounts=()=>write(accountsFile,accounts),saveSpaces=()=>write(spacesFile,spaces);
- saveAccounts();saveSpaces();
+ // Sessions are stored by the SHA-256 of their token, so a database leak does not leak live cookies.
+ const SESSION_MS=(Number(process.env.SESSION_HOURS)||168)*3600000,secure=()=>publicUrl().startsWith('https://')?'; Secure':'';
+ const hashToken=t=>crypto.createHash('sha256').update(String(t||'')).digest('hex');
+ const sessions=new Map(sessionRows.filter(r=>r.expires>Date.now()).map(r=>[r.tokenHash,r])),attempts=new Map();
+ const saveSessions=()=>{sessionRows.splice(0,sessionRows.length,...[...sessions.values()].filter(s=>s.expires>Date.now()));return storage.save('sessions');};
+ const dropSessions=test=>{let n=0;for(const [k,s] of sessions)if(test(s,k)){sessions.delete(k);n++;}if(n)saveSessions();};
+ const saveAccounts=()=>storage.save('accounts'),saveSpaces=()=>storage.save('spaces');
+ saveAccounts();saveSpaces();saveSessions();
  const limit=(key,max)=>{const a=attempts.get(key)||{count:0,start:Date.now()};if(Date.now()-a.start>900000){a.count=0;a.start=Date.now();}if(a.count>=max)fail('Çok fazla deneme. 15 dakika sonra tekrar deneyin.',429);a.count++;attempts.set(key,a);return ()=>attempts.delete(key);};
  const password=p=>{if(typeof p!=='string'||p.length<10||p.length>128)fail('Parola 10–128 karakter olmalı.');const salt=crypto.randomBytes(16).toString('hex');return {salt,hash:crypto.scryptSync(p,salt,64).toString('hex')};};
  const checkPassword=(a,p)=>{const hash=crypto.scryptSync(String(p||'').slice(0,128),a?.salt||'0'.repeat(32),64);return !!a&&crypto.timingSafeEqual(hash,Buffer.from(a.hash,'hex'));};
@@ -52,11 +56,11 @@ function createAuth(root,{emit=()=>{},publicUrl=()=>''}={}){
  const spaceName=v=>{if(typeof v!=='string'||!v.trim()||v.trim().length>80)fail('Firma adı 1–80 karakter olmalı.');return v.trim();};
  const phone=v=>{const p=str(v,30);if(p&&!/^[+0-9 ()-]{7,30}$/.test(p))fail('Telefon numarası geçersiz.');return p;};
  const isPlatformAdmin=a=>!!a&&(a.platformAdmin||(process.env.BUROS_PLATFORM_ADMINS||'').split(',').map(x=>x.trim().toLowerCase()).includes(a.email));
- const safeAccount=a=>({id:a.id,name:a.name,email:a.email,phone:a.phone||'',title:a.title||'',marketingConsent:!!a.marketingConsent,prefs:a.prefs,platformAdmin:isPlatformAdmin(a)});
+ const safeAccount=a=>({id:a.id,name:a.name,email:a.email,phone:a.phone||'',title:a.title||'',marketingConsent:!!a.marketingConsent,prefs:a.prefs,platformAdmin:isPlatformAdmin(a),emailVerified:!!a.emailVerifiedAt});
  const memberOf=(space,accountId)=>space?.members.find(m=>m.userId===accountId);
  const cookieToken=req=>(req.headers.cookie||'').split(';').map(x=>x.trim()).find(x=>x.startsWith('buros_session='))?.slice(14);
- const session=req=>{const s=sessions.get(cookieToken(req));if(!s||s.expires<Date.now())return null;return s;};
- const issue=(res,a,spaceId=null)=>{const t=crypto.randomBytes(32).toString('hex');sessions.set(t,{id:a.id,spaceId,expires:Date.now()+12*3600000});res.setHeader('Set-Cookie',`buros_session=${t}; HttpOnly; SameSite=Strict; Path=/; Max-Age=43200`);};
+ const session=req=>{const t=cookieToken(req);if(!t)return null;const s=sessions.get(hashToken(t));if(!s||s.expires<Date.now())return null;return s;};
+ const issue=(res,a,spaceId=null)=>{const t=crypto.randomBytes(32).toString('hex'),h=hashToken(t);sessions.set(h,{tokenHash:h,id:a.id,spaceId,expires:Date.now()+SESSION_MS,createdAt:now()});saveSessions();res.setHeader('Set-Cookie',`buros_session=${t}; HttpOnly; SameSite=Lax; Path=/; Max-Age=${Math.floor(SESSION_MS/1000)}${secure()}`);};
  const usable=(a,spaceId)=>{const space=spaces.find(s=>s.id===spaceId),m=memberOf(space,a.id);return m&&!m.disabled?space:null;};
  function billing(space){const ends=new Date(space.trialEndsAt).getTime(),trial=space.plan==='trial',daysLeft=Math.max(0,Math.ceil((ends-Date.now())/DAY));return {plan:space.plan,trialEndsAt:space.trialEndsAt,daysLeft:trial?daysLeft:null,expired:trial&&ends<=Date.now()};}
  function context(req){
@@ -70,7 +74,7 @@ function createAuth(root,{emit=()=>{},publicUrl=()=>''}={}){
   const list=spaces.filter(s=>usable(account,s.id)).map(s=>({id:s.id,name:s.name,role:memberOf(s,account.id).role,members:s.members.filter(m=>!m.disabled).length,...billing(s)}));
   return {user:{...safeAccount(account),...(actor?{role:actor.role,grants:actor.grants,username:account.email}:{})},spaces:list,options:OPTIONS,space:space?{id:space.id,name:space.name,role:actor.role,profile:space.profile,billing:billing(space),...(actor.role==='admin'?{invite:space.invite,invitations:space.invitations.filter(i=>!i.acceptedAt).map(({token,...i})=>i)}:{})}:null};
  }
- const select=(s,account,space)=>{s.spaceId=space.id;account.lastSpaceId=space.id;saveAccounts();};
+ const select=(s,account,space)=>{s.spaceId=space.id;account.lastSpaceId=space.id;saveAccounts();saveSessions();};
  const profileOf=v=>({sector:pick(v.sector,OPTIONS.sector),teamSize:pick(v.teamSize,OPTIONS.teamSize),projects:pick(v.projects,OPTIONS.projects),city:str(v.city,60),phone:phone(v.phone),website:str(v.website,120),taxOffice:str(v.taxOffice,80)});
  const inviteUrl=t=>`${publicUrl()}/app#davet=${t}`;
  function addInvitation(space,inviter,addr,role){
@@ -79,21 +83,26 @@ function createAuth(root,{emit=()=>{},publicUrl=()=>''}={}){
   else Object.assign(inv,{role,expiresAt:new Date(Date.now()+14*DAY).toISOString()});
   return inv;
  }
- return {context,info,billing,isPlatformAdmin,options:OPTIONS,dirFor:id=>path.join(root,'spaces',id),
+ const verifyUrl=a=>{const t=token();a.verifyHash=hashToken(t);return `${publicUrl()}/app#dogrula=${t}`;};
+ return {context,info,billing,isPlatformAdmin,options:OPTIONS,
   signup(v,req,res){
-   limit('signup:'+req.socket.remoteAddress,30);const e=email(v.email),n=name(v.name),p=password(v.password);
+   limit('signup:'+(req.ip||req.socket.remoteAddress),30);const e=email(v.email),n=name(v.name),p=password(v.password);
    if(v.kvkk!==true)fail('Devam etmek için KVKK aydınlatma metnini onaylayın.');
    if(accounts.some(a=>a.email===e))fail('Bu e-posta ile bir hesap zaten var. Giriş yapmayı deneyin.',409);
    const a={id:crypto.randomUUID(),email:e,name:n,...p,phone:phone(v.phone),title:pick(v.title,OPTIONS.title),source:pick(v.source,OPTIONS.source),marketingConsent:v.marketingConsent===true,kvkkAcceptedAt:now(),createdAt:now(),lastLoginAt:now(),lastSpaceId:null,prefs:{weeklyDigest:true,overdueEmails:true},unsubToken:token()};
-   accounts.push(a);saveAccounts();issue(res,a);emit('signup',{account:a});return safeAccount(a);
+   a.emailVerifiedAt=null;const url=verifyUrl(a);accounts.push(a);saveAccounts();issue(res,a);emit('signup',{account:a});emit('verify_email',{account:a,url});return safeAccount(a);
   },
-  login(v,req,res){const done=limit('login:'+req.socket.remoteAddress,20);const id=String(v.email??v.username??'').trim().toLowerCase();const a=accounts.find(a=>a.email===id&&!a.disabled);if(!checkPassword(a,v.password))fail('E-posta veya parola hatalı.',401);done();a.lastLoginAt=now();saveAccounts();const space=usable(a,a.lastSpaceId)||spaces.find(s=>usable(a,s.id));issue(res,a,space?.id||null);return safeAccount(a);},
-  logout(req,res){sessions.delete(cookieToken(req));res.setHeader('Set-Cookie','buros_session=; HttpOnly; SameSite=Strict; Path=/; Max-Age=0');},
+  login(v,req,res){const done=limit('login:'+(req.ip||req.socket.remoteAddress),20);const id=String(v.email??v.username??'').trim().toLowerCase();const a=accounts.find(a=>a.email===id&&!a.disabled);if(!checkPassword(a,v.password))fail('E-posta veya parola hatalı.',401);done();a.lastLoginAt=now();saveAccounts();const space=usable(a,a.lastSpaceId)||spaces.find(s=>usable(a,s.id));issue(res,a,space?.id||null);return safeAccount(a);},
+  logout(req,res){const t=cookieToken(req);if(t&&sessions.delete(hashToken(t)))saveSessions();res.setHeader('Set-Cookie',`buros_session=; HttpOnly; SameSite=Lax; Path=/; Max-Age=0${secure()}`);},
+  requestPasswordReset(v,req){limit('reset:'+(req.ip||req.socket.remoteAddress),10);const e=String(v.email||'').trim().toLowerCase();const a=accounts.find(a=>a.email===e&&!a.disabled);if(a){const t=token();a.resetHash=hashToken(t);a.resetExpires=Date.now()+3600000;saveAccounts();emit('password_reset',{account:a,url:`${publicUrl()}/app#sifre=${t}`});}return {ok:true};},
+  resetPassword(v,res){const h=hashToken(v.token);const a=accounts.find(a=>a.resetHash===h&&a.resetExpires>Date.now()&&!a.disabled);if(!a)fail('Bağlantı geçersiz veya süresi dolmuş. Yeniden parola sıfırlama isteyin.',400);Object.assign(a,password(v.password));delete a.resetHash;delete a.resetExpires;a.emailVerifiedAt??=now();a.lastLoginAt=now();saveAccounts();dropSessions(s=>s.id===a.id);const space=usable(a,a.lastSpaceId)||spaces.find(s=>usable(a,s.id));issue(res,a,space?.id||null);return safeAccount(a);},
+  verifyEmail(v){const h=hashToken(v.token);const a=accounts.find(a=>a.verifyHash===h);if(!a)fail('Doğrulama bağlantısı geçersiz veya daha önce kullanılmış.',400);a.emailVerifiedAt=now();delete a.verifyHash;saveAccounts();return safeAccount(a);},
+  resendVerification(req){const {account:a}=context(req);if(a.emailVerifiedAt)return {ok:true};limit('verify:'+a.id,5);const url=verifyUrl(a);saveAccounts();emit('verify_email',{account:a,url});return {ok:true};},
   createSpace(v,req){
    const {account,session:s}=context(req);
    if(spaces.filter(x=>memberOf(x,account.id)?.role==='admin').length>=20)fail('En fazla 20 çalışma alanı yönetebilirsiniz.',429);
    const space={id:crypto.randomUUID(),name:spaceName(v.name),createdAt:now(),createdBy:account.id,invite:{code:inviteCode(),enabled:true},members:[{userId:account.id,role:'admin',grants:[],disabled:false,joinedAt:now()}],profile:profileOf(v),plan:'trial',trialEndsAt:new Date(Date.now()+TRIAL_DAYS*DAY).toISOString(),invitations:[]};
-   fs.mkdirSync(path.join(root,'spaces',space.id,'files'),{recursive:true});spaces.push(space);saveSpaces();select(s,account,space);emit('space_created',{account,space});
+   spaces.push(space);saveSpaces();select(s,account,space);emit('space_created',{account,space});
    return {id:space.id,name:space.name};
   },
   joinSpace(v,req){const {account,session:s}=context(req);limit('join:'+account.id,10);const code=String(v.code||'').toUpperCase().replace(/[^A-Z0-9]/g,'');const space=code.length===8&&spaces.find(x=>x.invite.enabled&&x.invite.code.replace('-','')===code);if(!space)fail('Davet kodu geçersiz veya devre dışı.',404);const m=memberOf(space,account.id);if(m?.disabled)fail('Bu çalışma alanındaki erişiminiz kapatılmış. Yöneticiyle görüşün.',403);if(!m){space.members.push({userId:account.id,role:'staff',grants:[],disabled:false,joinedAt:now()});saveSpaces();}select(s,account,space);return {id:space.id,name:space.name};},
@@ -116,14 +125,14 @@ function createAuth(root,{emit=()=>{},publicUrl=()=>''}={}){
    if(inv.email!==account.email)fail(`Bu davet ${inv.email} adresine gönderildi. O hesapla giriş yapın.`,403);
    const m=memberOf(space,account.id);if(m?.disabled)fail('Bu çalışma alanındaki erişiminiz kapatılmış.',403);
    if(!m)space.members.push({userId:account.id,role:inv.role,grants:[],disabled:false,joinedAt:now()});
-   inv.acceptedAt=now();saveSpaces();select(s,account,space);return {id:space.id,name:space.name};
+   inv.acceptedAt=now();if(!account.emailVerifiedAt){account.emailVerifiedAt=now();saveAccounts();}saveSpaces();select(s,account,space);return {id:space.id,name:space.name};
   },
   updateAccount(v,req){
    const {account:a}=context(req);
    if(v.name!==undefined)a.name=name(v.name);if(v.phone!==undefined)a.phone=phone(v.phone);if(v.title!==undefined)a.title=pick(v.title,OPTIONS.title);
    if(typeof v.marketingConsent==='boolean')a.marketingConsent=v.marketingConsent;
    if(v.prefs&&typeof v.prefs==='object')a.prefs={weeklyDigest:!!v.prefs.weeklyDigest,overdueEmails:!!v.prefs.overdueEmails};
-   if(v.newPassword){if(!checkPassword(a,v.currentPassword))fail('Mevcut parola hatalı.',403);Object.assign(a,password(v.newPassword));const current=cookieToken(req);for(const [k,s] of sessions)if(s.id===a.id&&k!==current)sessions.delete(k);}
+   if(v.newPassword){if(!checkPassword(a,v.currentPassword))fail('Mevcut parola hatalı.',403);Object.assign(a,password(v.newPassword));const current=hashToken(cookieToken(req));dropSessions((s,k)=>s.id===a.id&&k!==current);}
    saveAccounts();return safeAccount(a);
   },
   updateSpaceProfile(v,space){if(v.name!==undefined)space.name=spaceName(v.name);space.profile=profileOf({...space.profile,...v});saveSpaces();return {name:space.name,profile:space.profile};},
@@ -138,7 +147,7 @@ function createAuth(root,{emit=()=>{},publicUrl=()=>''}={}){
     if(!a){const inv=addInvitation(space,actor,e,v.role);saveSpaces();emit('invite',{space,invitation:inv,inviter:accounts.find(x=>x.id===actor.id),url:inviteUrl(inv.token)});return {invited:true,email:e};}
     m={userId:a.id,joinedAt:now()};space.members.push(m);}
    Object.assign(m,{role:v.role,grants:v.grants,disabled:!!v.disabled});saveSpaces();
-   for(const [key,s] of sessions)if(s.id===a.id&&s.spaceId===space.id&&a.id!==actor.id)sessions.delete(key);
+   dropSessions(s=>s.id===a.id&&s.spaceId===space.id&&a.id!==actor.id);
    return this.members(space).find(x=>x.id===a.id);
   },
   unsubscribe(t){const a=accounts.find(a=>a.unsubToken===t);if(!a)return false;a.marketingConsent=false;saveAccounts();return true;},
@@ -146,7 +155,7 @@ function createAuth(root,{emit=()=>{},publicUrl=()=>''}={}){
   all:()=>({accounts,spaces}),
   save(){saveAccounts();saveSpaces();},
   setPlan(id,v){const s=spaces.find(s=>s.id===id);if(!s)fail('Çalışma alanı bulunamadı.',404);if(v.plan!==undefined){if(!PLANS.includes(v.plan))fail('Plan geçersiz.');s.plan=v.plan;}if(Number.isFinite(v.extendDays)&&v.extendDays>0&&v.extendDays<=365){const base=Math.max(Date.now(),new Date(s.trialEndsAt).getTime());s.trialEndsAt=new Date(base+v.extendDays*DAY).toISOString();s.plan='trial';}saveSpaces();return billing(s);},
-  setAccount(id,v,actor){const a=accounts.find(a=>a.id===id);if(!a)fail('Hesap bulunamadı.',404);if(a.id===actor.id&&(v.disabled||v.platformAdmin===false))fail('Kendi erişiminizi kaldıramazsınız.');if(typeof v.disabled==='boolean')a.disabled=v.disabled;if(typeof v.platformAdmin==='boolean')a.platformAdmin=v.platformAdmin;if(a.disabled)for(const [k,s] of sessions)if(s.id===a.id)sessions.delete(k);saveAccounts();return safeAccount(a);}
+  setAccount(id,v,actor){const a=accounts.find(a=>a.id===id);if(!a)fail('Hesap bulunamadı.',404);if(a.id===actor.id&&(v.disabled||v.platformAdmin===false))fail('Kendi erişiminizi kaldıramazsınız.');if(typeof v.disabled==='boolean')a.disabled=v.disabled;if(typeof v.platformAdmin==='boolean')a.platformAdmin=v.platformAdmin;if(a.disabled)dropSessions(s=>s.id===a.id);saveAccounts();return safeAccount(a);}
  };
 }
 module.exports={createAuth,migrateLegacy,inviteCode,OPTIONS,TRIAL_DAYS};

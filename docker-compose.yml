@@ -1,0 +1,55 @@
+# bürOS üretim yığını: uygulama + PostgreSQL + Caddy (otomatik HTTPS).
+# Kullanım: cp .env.example .env && (değerleri doldurun) && docker compose up -d --build
+services:
+  app:
+    build: .
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      NODE_ENV: production
+      PORT: "3000"
+      BUROS_DATA_DIR: /data
+      BUROS_PUBLIC_URL: https://${BUROS_DOMAIN}
+      DATABASE_URL: postgres://buros:${POSTGRES_PASSWORD}@db:5432/buros
+    volumes:
+      - app-data:/data
+    depends_on:
+      db:
+        condition: service_healthy
+
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: buros
+      POSTGRES_DB: buros
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U buros -d buros"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    environment:
+      BUROS_DOMAIN: ${BUROS_DOMAIN}
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    depends_on:
+      - app
+
+volumes:
+  app-data:
+  db-data:
+  caddy-data:
+  caddy-config:

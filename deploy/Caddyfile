@@ -1,0 +1,11 @@
+{$BUROS_DOMAIN} {
+	encode zstd gzip
+	request_body {
+		max_size 60MB
+	}
+	reverse_proxy app:3000
+}
+
+www.{$BUROS_DOMAIN} {
+	redir https://{$BUROS_DOMAIN}{uri} permanent
+}

@@ -1,23 +1,22 @@
-const fs=require('node:fs'),path=require('node:path');
+
 // Event and schedule driven e-mails. "service" rules go to everyone involved; "marketing" rules
 // and campaigns only reach accounts that opted in, and always carry an unsubscribe link.
-const read=(f,d)=>fs.existsSync(f)?JSON.parse(fs.readFileSync(f,'utf8')):d;
-const write=(f,v)=>{fs.writeFileSync(f+'.tmp',JSON.stringify(v,null,2));fs.renameSync(f+'.tmp',f);};
 const DAY=864e5;
 const RULES=[
  {id:'welcome',name:'Hoş geldin e-postası',trigger:'signup',kind:'service',enabled:true,subject:'bürOS\'a hoş geldiniz, {{ad}}',body:'Merhaba {{ad}},\n\nbürOS hesabınız hazır. Şimdi büronuz için bir çalışma alanı kurabilir ya da ekibinizden aldığınız davet koduyla mevcut bir alana katılabilirsiniz.\n\nUygulamaya giriş: {{uygulama}}\n\nSorularınız için bu e-postayı yanıtlayabilirsiniz.\n\nbürOS ekibi'},
  {id:'space_created',name:'Çalışma alanı kuruldu',trigger:'space_created',kind:'service',enabled:true,subject:'{{firma}} çalışma alanı hazır, 14 günlük deneme başladı',body:'Merhaba {{ad}},\n\n{{firma}} çalışma alanınız kuruldu. Deneme süreniz {{deneme_bitis}} tarihine kadar sürüyor; bu sürede Büro planının tüm özelliklerini kullanabilirsiniz.\n\nİlk adımlar için öneriler:\n1. Bir şantiye oluşturun ya da şablondan başlayın.\n2. Ekibinizi davet edin ve şantiye bazında erişim verin.\n3. Hedef tarihleri girin; geciken işler genel bakışta görünsün.\n\n{{uygulama}}'},
  {id:'invite',name:'Ekip daveti',trigger:'invite',kind:'service',enabled:true,locked:true,subject:'{{davet_eden}} sizi {{firma}} çalışma alanına davet etti',body:'Merhaba,\n\n{{davet_eden}}, sizi bürOS üzerindeki {{firma}} çalışma alanına davet etti.\n\nDaveti kabul etmek için: {{davet_linki}}\n\nBağlantı 14 gün geçerlidir. Bu daveti beklemiyorsanız e-postayı dikkate almayın.'},
+ {id:'verify_email',name:'E-posta doğrulama',trigger:'verify_email',kind:'service',enabled:true,locked:true,subject:'E-posta adresinizi doğrulayın',body:'Merhaba {{ad}},\n\nbürOS hesabınızın e-posta adresini doğrulamak için bağlantıya tıklayın:\n{{dogrulama_linki}}\n\nBu hesabı siz açmadıysanız e-postayı dikkate almayın.'},
+ {id:'password_reset',name:'Parola sıfırlama',trigger:'password_reset',kind:'service',enabled:true,locked:true,subject:'bürOS parola sıfırlama',body:'Merhaba {{ad}},\n\nParolanızı sıfırlamak için aşağıdaki bağlantıyı kullanın. Bağlantı 1 saat geçerlidir ve yalnızca bir kez kullanılabilir.\n{{sifirlama_linki}}\n\nBu isteği siz yapmadıysanız e-postayı dikkate almayın; parolanız değişmez.'},
  {id:'trial_ending',name:'Deneme bitiyor (3 gün kala)',trigger:'trial_ending',kind:'service',enabled:true,subject:'Deneme sürenizin bitmesine {{kalan_gun}} gün kaldı',body:'Merhaba {{ad}},\n\n{{firma}} çalışma alanınızın deneme süresi {{deneme_bitis}} tarihinde sona eriyor. Kesintisiz devam etmek için bir plan seçin; verileriniz olduğu gibi kalır.\n\n{{uygulama}}'},
  {id:'trial_expired',name:'Deneme sona erdi',trigger:'trial_expired',kind:'service',enabled:true,subject:'{{firma}} deneme süresi sona erdi',body:'Merhaba {{ad}},\n\n{{firma}} çalışma alanınızın deneme süresi doldu. Kayıtlarınız silinmedi; çalışma alanı şu an salt okunur. Bir plan seçtiğinizde kaldığınız yerden devam edebilirsiniz.\n\n{{uygulama}}'},
  {id:'inactive',name:'14 gündür giriş yapmayanlar',trigger:'inactive_14',kind:'marketing',enabled:false,subject:'{{firma}} sizi bekliyor',body:'Merhaba {{ad}},\n\nBir süredir bürOS\'a uğramadınız. Geciken teslimleri ve yaklaşan tarihleri genel bakış ekranında tek bakışta görebilirsiniz.\n\n{{uygulama}}'}
 ];
-function createAutomations(root,{mailer,auth,publicUrl}){
- const file=path.join(root,'automations.json');
- const data=read(file,{rules:[],log:{},campaigns:[]});
+function createAutomations(storage,{mailer,auth,publicUrl}){
+ const data=storage.doc('automations')||{rules:[],log:{},campaigns:[]};
  data.rules=RULES.map(r=>({...r,...(data.rules.find(x=>x.id===r.id)||{}),trigger:r.trigger,kind:r.kind,locked:!!r.locked}));
  data.log??={};data.campaigns??=[];
- const save=()=>write(file,data);save();
+ const save=()=>storage.setDoc('automations',data);save();
  const date=iso=>new Date(iso).toLocaleDateString('tr-TR',{day:'numeric',month:'long',year:'numeric'});
  const unsubscribeUrl=a=>`${publicUrl()}/abonelik?t=${a.unsubToken}`;
  function vars(account,space,extra={}){const b=space&&auth.billing(space);return {ad:(account?.name||'').split(' ')[0],ad_soyad:account?.name||'',eposta:account?.email||'',firma:space?.name||'',uygulama:`${publicUrl()}/app`,deneme_bitis:b?date(b.trialEndsAt):'',kalan_gun:b?.daysLeft??'',...extra};}
@@ -31,6 +30,8 @@ function createAutomations(root,{mailer,auth,publicUrl}){
  async function fire(trigger,p){
   const rule=data.rules.find(r=>r.trigger===trigger);if(!rule||(!rule.enabled&&!rule.locked))return;
   if(trigger==='invite'){const {accounts}=auth.all();const target=accounts.find(a=>a.email===p.invitation.email);return deliver(rule,p.invitation.email,target,vars(target,p.space,{davet_eden:p.inviter?.name||'Ekibiniz',davet_linki:p.url}));}
+  if(trigger==='verify_email')return deliver(rule,p.account.email,p.account,vars(p.account,null,{dogrulama_linki:p.url}));
+  if(trigger==='password_reset')return deliver(rule,p.account.email,p.account,vars(p.account,null,{sifirlama_linki:p.url}));
   return deliver(rule,p.account.email,p.account,vars(p.account,p.space),`${rule.id}:${p.account.id}:${p.space?.id||''}`);
  }
  // Time-based rules; safe to run repeatedly because every send is recorded in the log.
