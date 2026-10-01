@@ -55,6 +55,25 @@ jobs:
             quiet flyctl secrets set -a "$APP" --stage BUROS_PLATFORM_ADMINS="$ADMIN_EMAIL" || echo "::warning::Yönetici ayarı yazılamadı."
           fi
           exit 0
+      - name: Public address and persistent disk
+        if: steps.token.outputs.ok
+        run: |
+          set -uo pipefail
+          APP=$(sed -n 's/^app = "\(.*\)"/\1/p' fly.toml)
+          if [ "$(flyctl ips list -a "$APP" --json | jq 'length')" = "0" ]; then
+            echo "== Genel IP adresleri ayrılıyor"
+            flyctl ips allocate-v6 -a "$APP" || echo "::warning::IPv6 ayrılamadı."
+            flyctl ips allocate-v4 --shared -a "$APP" || echo "::warning::IPv4 ayrılamadı."
+          else echo "IP adresleri var."; fi
+          if ! flyctl volumes list -a "$APP" --json | jq -e '.[] | select(.name=="buros_data")' >/dev/null; then
+            echo "== Kalıcı disk oluşturuluyor (buros_data, 3 GB)"
+            flyctl volumes create buros_data -a "$APP" --region "$REGION" --size 3 --yes
+          else echo "Kalıcı disk var."; fi
+          # Machines created before the disk existed cannot get it attached; replace them.
+          for id in $(flyctl machines list -a "$APP" --json | jq -r '.[] | select(((.config.mounts // []) | length) == 0) | .id'); do
+            echo "== Disksiz makine kaldırılıyor: $id"
+            flyctl machine destroy "$id" -a "$APP" --force
+          done
       - name: Deploy
         if: steps.token.outputs.ok
         run: flyctl deploy --remote-only --ha=false --wait-timeout 300
@@ -65,7 +84,7 @@ jobs:
         if: steps.token.outputs.ok
         run: |
           APP=$(sed -n 's/^app = "\(.*\)"/\1/p' fly.toml)
-          for i in $(seq 1 20); do
+          for i in $(seq 1 40); do
             if curl -fsS "https://$APP.fly.dev/healthz"; then echo; echo "Yayında: https://$APP.fly.dev"; exit 0; fi
             sleep 6
           done

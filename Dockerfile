@@ -5,9 +5,9 @@ COPY package.json package-lock.json ./
 RUN npm ci --omit=dev && npm cache clean --force
 COPY . .
 RUN mkdir -p /data && chown -R node:node /data
-USER node
 EXPOSE 3000
 VOLUME ["/data"]
 HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
   CMD wget -qO- http://127.0.0.1:3000/healthz >/dev/null || exit 1
+# Starts as root only to fix volume ownership (server.cjs then switches to the "node" user).
 CMD ["node", "server.cjs"]

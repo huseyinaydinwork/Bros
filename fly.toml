@@ -1,6 +1,7 @@
 # bürOS on Fly.io. First-time setup: scripts/fly-setup.sh (see DEPLOY.md, "Fly.io").
 # The app keeps its working set in memory, so exactly one machine must run: deploy with --ha=false
-# and never scale above one. Data lives in Fly Postgres (DATABASE_URL) and files in Tigris (BUCKET_NAME).
+# and never scale above one. Data lives in Fly Postgres (DATABASE_URL) when attached, otherwise on the
+# buros_data volume; files go to Tigris (BUCKET_NAME) when attached, otherwise to the volume.
 app = "buros"
 primary_region = "fra"
 
@@ -10,7 +11,12 @@ primary_region = "fra"
 [env]
   NODE_ENV = "production"
   PORT = "3000"
-  BUROS_DATA_DIR = "/tmp/buros"
+  BUROS_DATA_DIR = "/data"
+
+# Persistent disk for data (file backend) and uploads until Postgres / Tigris are attached.
+[mounts]
+  source = "buros_data"
+  destination = "/data"
 
 [http_service]
   internal_port = 3000
