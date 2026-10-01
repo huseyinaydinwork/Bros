@@ -1,0 +1,30 @@
+# Deploys to Fly.io on every push to main. Needs the repository secret FLY_API_TOKEN
+# (fly tokens create deploy -a <app>). Without it the job is skipped.
+name: Fly.io deploy
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+concurrency: fly-deploy
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    env:
+      FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check token
+        id: token
+        run: if [ -n "$FLY_API_TOKEN" ]; then echo "ok=1" >> "$GITHUB_OUTPUT"; else echo "FLY_API_TOKEN tanımlı değil; yayın atlandı."; fi
+      - uses: actions/setup-node@v4
+        if: steps.token.outputs.ok
+        with:
+          node-version: 22
+      - name: Syntax check
+        if: steps.token.outputs.ok
+        run: npm run check
+      - uses: superfly/flyctl-actions/setup-flyctl@master
+        if: steps.token.outputs.ok
+      - name: Deploy
+        if: steps.token.outputs.ok
+        run: flyctl deploy --remote-only --ha=false
