@@ -4,7 +4,7 @@ const fs=require('node:fs'),path=require('node:path'),crypto=require('node:crypt
 // PostgreSQL (production, set DATABASE_URL). Uploaded files go to disk or to S3-compatible
 // object storage (set S3_BUCKET). The in-memory model assumes a single application instance.
 const COLLECTIONS=['accounts','spaces','leads','outbox','sessions'];
-const DOCS=['automations'];
+const DOCS=['automations','site','analytics'];
 const read=(f,d)=>{try{return fs.existsSync(f)?JSON.parse(fs.readFileSync(f,'utf8')):d;}catch{return d;}};
 const writeFile=(f,v)=>{fs.mkdirSync(path.dirname(f),{recursive:true});fs.writeFileSync(f+'.tmp',typeof v==='string'||Buffer.isBuffer(v)?v:JSON.stringify(v,null,2));fs.renameSync(f+'.tmp',f);};
 const keyOf=(name,row)=>name==='sessions'?row.tokenHash:row.id;

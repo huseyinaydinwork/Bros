@@ -72,7 +72,8 @@ function createAuth(storage,{emit=()=>{},publicUrl=()=>''}={}){
  function info(req){
   const {account,space,actor}=context(req);if(!account)return {user:null,options:OPTIONS};
   const list=spaces.filter(s=>usable(account,s.id)).map(s=>({id:s.id,name:s.name,role:memberOf(s,account.id).role,members:s.members.filter(m=>!m.disabled).length,...billing(s)}));
-  return {user:{...safeAccount(account),...(actor?{role:actor.role,grants:actor.grants,username:account.email}:{})},spaces:list,options:OPTIONS,space:space?{id:space.id,name:space.name,role:actor.role,profile:space.profile,billing:billing(space),...(actor.role==='admin'?{invite:space.invite,invitations:space.invitations.filter(i=>!i.acceptedAt).map(({token,...i})=>i)}:{})}:null};
+  const pending=spaces.filter(s=>(s.requests||[]).some(r=>r.userId===account.id)).map(s=>({spaceId:s.id,spaceName:s.name,requestedAt:s.requests.find(r=>r.userId===account.id).requestedAt}));
+  return {user:{...safeAccount(account),...(actor?{role:actor.role,grants:actor.grants,username:account.email}:{})},spaces:list,pending,options:OPTIONS,space:space?{id:space.id,name:space.name,role:actor.role,profile:space.profile,billing:billing(space),code:space.invite.enabled?space.invite.code:null,...(actor.role==='admin'?{invite:space.invite,invitations:space.invitations.filter(i=>!i.acceptedAt).map(({token,...i})=>i),requests:(space.requests||[]).map(r=>{const a=accounts.find(x=>x.id===r.userId);return a&&!a.disabled&&{id:r.id,name:a.name,email:a.email,title:a.title||'',requestedAt:r.requestedAt};}).filter(Boolean)}:{})}:null};
  }
  const select=(s,account,space)=>{s.spaceId=space.id;account.lastSpaceId=space.id;saveAccounts();saveSessions();};
  const profileOf=v=>({sector:pick(v.sector,OPTIONS.sector),teamSize:pick(v.teamSize,OPTIONS.teamSize),projects:pick(v.projects,OPTIONS.projects),city:str(v.city,60),phone:phone(v.phone),website:str(v.website,120),taxOffice:str(v.taxOffice,80)});
@@ -105,7 +106,18 @@ function createAuth(storage,{emit=()=>{},publicUrl=()=>''}={}){
    spaces.push(space);saveSpaces();select(s,account,space);emit('space_created',{account,space});
    return {id:space.id,name:space.name};
   },
-  joinSpace(v,req){const {account,session:s}=context(req);limit('join:'+account.id,10);const code=String(v.code||'').toUpperCase().replace(/[^A-Z0-9]/g,'');const space=code.length===8&&spaces.find(x=>x.invite.enabled&&x.invite.code.replace('-','')===code);if(!space)fail('Davet kodu geçersiz veya devre dışı.',404);const m=memberOf(space,account.id);if(m?.disabled)fail('Bu çalışma alanındaki erişiminiz kapatılmış. Yöneticiyle görüşün.',403);if(!m){space.members.push({userId:account.id,role:'staff',grants:[],disabled:false,joinedAt:now()});saveSpaces();}select(s,account,space);return {id:space.id,name:space.name};},
+  // A code only creates a join request; a space admin approves or rejects it.
+  joinSpace(v,req){const {account,session:s}=context(req);limit('join:'+account.id,10);const code=String(v.code||'').toUpperCase().replace(/[^A-Z0-9]/g,'');const space=code.length===8&&spaces.find(x=>x.invite.enabled&&x.invite.code.replace('-','')===code);if(!space)fail('Davet kodu geçersiz veya devre dışı.',404);const m=memberOf(space,account.id);if(m?.disabled)fail('Bu çalışma alanındaki erişiminiz kapatılmış. Yöneticiyle görüşün.',403);
+   if(m){select(s,account,space);return {id:space.id,name:space.name};}
+   space.requests??=[];let r=space.requests.find(r=>r.userId===account.id);
+   if(!r){if(space.requests.length>=200)fail('Bu çalışma alanında çok fazla bekleyen istek var. Yöneticiyle görüşün.',429);r={id:crypto.randomUUID(),userId:account.id,requestedAt:now()};space.requests.push(r);saveSpaces();emit('join_request',{space,account,admins:space.members.filter(x=>x.role==='admin'&&!x.disabled).map(x=>accounts.find(a=>a.id===x.userId)).filter(a=>a&&!a.disabled)});}
+   return {pending:true,spaceId:space.id,spaceName:space.name,requestedAt:r.requestedAt};
+  },
+  cancelRequest(v,req){const {account}=context(req);const space=spaces.find(s=>s.id===v.spaceId);if(space?.requests){space.requests=space.requests.filter(r=>r.userId!==account.id);saveSpaces();}return {ok:true};},
+  resolveRequest(v,actor,space){const r=(space.requests||[]).find(r=>r.id===v.id);if(!r)fail('İstek bulunamadı ya da zaten yanıtlandı.',404);const a=accounts.find(a=>a.id===r.userId);space.requests=space.requests.filter(x=>x.id!==r.id);
+   if(v.approve===true&&a&&!a.disabled){if(!memberOf(space,a.id))space.members.push({userId:a.id,role:ROLES[v.role]?v.role:'staff',grants:[],disabled:false,joinedAt:now(),approvedBy:actor.id});emit('join_approved',{account:a,space});}
+   saveSpaces();return {ok:true,members:this.members(space)};
+  },
   selectSpace(v,req){const {account,session:s}=context(req);const space=usable(account,v.spaceId);if(!space)fail('Bu çalışma alanına erişiminiz yok.',403);select(s,account,space);return {id:space.id,name:space.name};},
   leaveSpace(req){const {account,session:s,space,actor}=context(req);if(!space)fail('Çalışma alanı seçili değil.');if(actor.role==='admin'&&space.members.filter(m=>m.role==='admin'&&!m.disabled).length<2)fail('Son yönetici çalışma alanından ayrılamaz.');space.members=space.members.filter(m=>m.userId!==account.id);saveSpaces();s.spaceId=null;return {ok:true};},
   invite(v,space){if(v.regenerate)space.invite.code=inviteCode();if(typeof v.enabled==='boolean')space.invite.enabled=v.enabled;saveSpaces();return space.invite;},
