@@ -1032,3 +1032,14 @@ a.nav-item{text-decoration:none}
 .verify-banner>.icon{color:var(--sage-700)}
 .verify-banner>div{flex:1;display:flex;flex-direction:column}
 .verify-banner b{font-size:13.5px}.verify-banner span{font-size:12.5px;color:var(--text-2)}
+
+/* Sign-in splash */
+.splash{position:fixed;inset:0;z-index:200;display:grid;place-items:center;background:var(--sb-bg);animation:splash-in .25s ease-out}
+.splash .logo{height:56px;width:auto;animation:splash-zoom 1.1s cubic-bezier(.2,.8,.2,1) both}
+.splash .logo .logo-a{fill:var(--sb-strong)}.splash .logo .logo-b{fill:var(--sb-accent)}
+.splash.out{animation:splash-out .45s ease-in forwards}
+.splash.out .logo{animation:splash-zoom-out .45s ease-in forwards}
+@keyframes splash-in{from{opacity:0}to{opacity:1}}
+@keyframes splash-zoom{0%{transform:scale(.55);opacity:0}45%{transform:scale(1.12);opacity:1}70%{transform:scale(.96)}100%{transform:scale(1)}}
+@keyframes splash-zoom-out{to{transform:scale(1.6);opacity:0}}
+@keyframes splash-out{to{opacity:0;visibility:hidden}}
