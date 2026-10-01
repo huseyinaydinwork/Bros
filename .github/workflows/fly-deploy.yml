@@ -32,36 +32,35 @@ jobs:
       - name: Provision database and file storage
         if: steps.token.outputs.ok
         run: |
-          set -euo pipefail
+          set -uo pipefail
           APP=$(sed -n 's/^app = "\(.*\)"/\1/p' fly.toml)
           # Run a command but print only lines that cannot carry credentials.
-          quiet(){ if "$@" >/tmp/out 2>&1; then grep -viE 'postgres(ql)?://|password|secret|key|token' /tmp/out | tail -20 || true; else grep -viE 'postgres(ql)?://|password|secret|key|token' /tmp/out | tail -40 || true; return 1; fi; }
-          flyctl apps list --json > /tmp/apps.json
-          ORG=$(jq -r --arg a "$APP" '.[] | select(.Name==$a) | (.Organization.Slug // .Organization.slug // empty)' /tmp/apps.json | head -1)
-          [ -n "$ORG" ] || { echo "Uygulama bulunamadı: $APP"; exit 1; }
-          echo "Uygulama: $APP · organizasyon: $ORG"
-          SECRETS=$(flyctl secrets list -a "$APP" --json | jq -r '.[] | (.Name // .name)')
+          quiet(){ "$@" >/tmp/out 2>&1; rc=$?; grep -viE 'postgres(ql)?://|password|secret|key|token' /tmp/out | tail -25 || true; return $rc; }
+          echo "== Token kontrolü"
+          if ! quiet flyctl status -a "$APP"; then echo "::error::Token '$APP' uygulamasına erişemiyor (FLY_API_TOKEN yanlış ya da başka bir uygulamaya ait)."; exit 1; fi
+          SECRETS=$(flyctl secrets list -a "$APP" --json 2>/dev/null | jq -r '.[] | (.Name // .name)' || true)
+          echo "Tanımlı ayarlar: $(echo $SECRETS | tr '\n' ' ')"
+          ORG=$(flyctl orgs list --json 2>/dev/null | jq -r 'if type=="object" then keys[0] else .[0].Slug // .[0].slug end' 2>/dev/null || true)
+          ORG=${ORG:-personal}
           if ! grep -qx DATABASE_URL <<<"$SECRETS"; then
-            if ! jq -e --arg a "$APP-db" '.[] | select(.Name==$a)' /tmp/apps.json >/dev/null; then
-              echo "== PostgreSQL oluşturuluyor: $APP-db"
-              quiet flyctl postgres create --name "$APP-db" --org "$ORG" --region "$REGION" --initial-cluster-size 1 --vm-size shared-cpu-1x --volume-size 10
-            fi
-            echo "== PostgreSQL bağlanıyor"
-            quiet flyctl postgres attach "$APP-db" -a "$APP" --yes
+            echo "== PostgreSQL: $APP-db"
+            quiet flyctl postgres create --name "$APP-db" --org "$ORG" --region "$REGION" --initial-cluster-size 1 --vm-size shared-cpu-1x --volume-size 10 || echo "::warning::PostgreSQL oluşturulamadı (zaten var olabilir ya da token organizasyon yetkisine sahip değil)."
+            quiet flyctl postgres attach "$APP-db" -a "$APP" --yes || echo "::warning::PostgreSQL bağlanamadı. Veriler kalıcı olmayacak; organizasyon token'ı gerekir (fly tokens create org)."
           else echo "PostgreSQL bağlı."; fi
           if ! grep -qx BUCKET_NAME <<<"$SECRETS"; then
-            echo "== Dosya deposu (Tigris) oluşturuluyor"
-            quiet flyctl storage create -a "$APP" -o "$ORG" -n "$APP-files" --yes
+            echo "== Dosya deposu (Tigris)"
+            quiet flyctl storage create -a "$APP" -o "$ORG" -n "$APP-files" --yes || echo "::warning::Dosya deposu oluşturulamadı; yüklenen dosyalar kalıcı olmayacak."
           else echo "Dosya deposu bağlı."; fi
           if ! grep -qx BUROS_PLATFORM_ADMINS <<<"$SECRETS"; then
-            quiet flyctl secrets set -a "$APP" --stage BUROS_PLATFORM_ADMINS="$ADMIN_EMAIL"
+            quiet flyctl secrets set -a "$APP" --stage BUROS_PLATFORM_ADMINS="$ADMIN_EMAIL" || echo "::warning::Yönetici ayarı yazılamadı."
           fi
+          exit 0
       - name: Deploy
         if: steps.token.outputs.ok
         run: flyctl deploy --remote-only --ha=false --wait-timeout 300
       - name: Keep exactly one machine
         if: steps.token.outputs.ok
-        run: flyctl scale count 1 --yes
+        run: flyctl scale count 1 --yes || echo "::warning::Makine sayısı ayarlanamadı."
       - name: Health check
         if: steps.token.outputs.ok
         run: |
