@@ -25,6 +25,8 @@ async function pgBackend(url,exclusive=true){
  const {Pool}=require('pg');
  const ssl=/sslmode=(require|verify)/.test(url)||process.env.DATABASE_SSL==='1'?{rejectUnauthorized:process.env.DATABASE_SSL_INSECURE!=='1'}:undefined;
  const pool=new Pool({connectionString:url.replace(/[?&]sslmode=[^&]*/,''),ssl,max:Number(process.env.DATABASE_POOL)||10});
+ // The database may come up a little after the app (private DNS, cold start): retry for a while.
+ for(let i=0;;i++){try{await pool.query('select 1');break;}catch(e){if(i>=14)throw e;console.warn('[depolama] Veritabanına bağlanılamadı, tekrar deneniyor:',e.message);await new Promise(r=>setTimeout(r,2000));}}
  await pool.query(`create table if not exists buros_records(kind text not null,id text not null,data jsonb not null,updated_at timestamptz not null default now(),primary key(kind,id));
   create table if not exists buros_workspaces(space_id text primary key,revision integer not null default 0,data jsonb not null,updated_at timestamptz not null default now());`);
  // Only one application instance may own the data (it is cached in memory). A session-level

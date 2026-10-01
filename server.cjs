@@ -10,11 +10,13 @@ const {createStorage}=require('./storage.cjs');
 const {migrateLegacy}=require('./auth.cjs');
 const ROOT = process.env.BUROS_DATA_DIR || path.join(__dirname, '.buros');
 const PROD=process.env.NODE_ENV==='production';
-const PUBLIC_URL=(process.env.BUROS_PUBLIC_URL||'').replace(/\/$/,'');
+// On Fly.io the app name is known, so APP.fly.dev works without extra configuration.
+const FLY_HOST=process.env.FLY_APP_NAME?process.env.FLY_APP_NAME+'.fly.dev':'';
+const PUBLIC_URL=(process.env.BUROS_PUBLIC_URL||(FLY_HOST?'https://'+FLY_HOST:'')).replace(/\/$/,'');
 const HOST=process.env.HOST||(PROD?'0.0.0.0':'127.0.0.1');
 const TRUST_PROXY=process.env.TRUST_PROXY==='1'||PROD;
 // Requests must name one of these hosts; localhost always works so health checks and local runs pass.
-const allowedHosts=new Set(['localhost','127.0.0.1','[::1]',...(PUBLIC_URL?[new URL(PUBLIC_URL).hostname]:[]),...(process.env.BUROS_ALLOWED_HOSTS||'').split(',').map(x=>x.trim().toLowerCase()).filter(Boolean)]);
+const allowedHosts=new Set(['localhost','127.0.0.1','[::1]',...(PUBLIC_URL?[new URL(PUBLIC_URL).hostname]:[]),...(FLY_HOST?[FLY_HOST]:[]),...(process.env.BUROS_ALLOWED_HOSTS||'').split(',').map(x=>x.trim().toLowerCase()).filter(Boolean)]);
 // Links inside e-mails need an absolute address; BUROS_PUBLIC_URL wins, otherwise the last host seen.
 let seenOrigin='';const publicUrl=()=>PUBLIC_URL||seenOrigin||'http://localhost:3000';
 let storage,auth,mailer,automations;
