@@ -183,7 +183,17 @@ function legalPage(){
 function serveStatic(url,req,res){const file=publicFiles[url.pathname];if(!file||!['GET','HEAD'].includes(req.method))return json(res,404,{error:'Bulunamadı.'});
  if(file==='legal.html'){res.writeHead(200,{'Content-Type':'text/html; charset=utf-8','Cache-Control':'no-cache'});return res.end(req.method==='HEAD'?undefined:legalPage());}const type=file.endsWith('.css')?'text/css':file.endsWith('.js')||file.endsWith('.mjs')?'text/javascript':file.endsWith('.svg')?'image/svg+xml':'text/html';res.writeHead(200,{'Content-Type':type+'; charset=utf-8','Cache-Control':'no-cache'});if(req.method==='HEAD')return res.end();fs.createReadStream(path.join(__dirname,file)).on('error',()=>res.end()).pipe(res);}
 // Starts the HTTP server. In production it binds 0.0.0.0 behind a reverse proxy that terminates TLS.
-async function start(port=Number(process.env.PORT)||3000){
+// Volumes are mounted owned by root. When started as root, hand the data directory to the
+// unprivileged "node" user and continue as that user.
+function dropPrivileges(){
+ if(typeof process.getuid!=='function'||process.getuid()!==0||process.env.BUROS_RUN_AS_ROOT==='1')return;
+ let uid,gid;try{uid=Number(require('node:child_process').execFileSync('id',['-u','node']).toString());gid=Number(require('node:child_process').execFileSync('id',['-g','node']).toString());}catch{return;}
+ fs.mkdirSync(ROOT,{recursive:true});
+ const walk=p=>{const st=fs.lstatSync(p);if(st.uid!==uid)fs.lchownSync(p,uid,gid);if(st.isDirectory())for(const n of fs.readdirSync(p))walk(path.join(p,n));};
+ walk(ROOT);
+ process.setgid(gid);process.setuid(uid);
+}
+async function start(port=Number(process.env.PORT)||3000){dropPrivileges();
  await init();
  if(PROD&&!PUBLIC_URL)console.warn('Uyarı: BUROS_PUBLIC_URL tanımlı değil; e-posta bağlantıları yanlış adrese gidebilir.');
  const server=http.createServer(handler);server.requestTimeout=120000;server.headersTimeout=65000;server.keepAliveTimeout=61000;
