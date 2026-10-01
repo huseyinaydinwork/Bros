@@ -17,6 +17,8 @@ Yığın: tek uygulama makinesi (`fly.toml`), Fly Postgres (`DATABASE_URL`) ve d
 5. Kendi alan adınız: `fly certs add alanadiniz.com -a APP`, DNS'e gösterilen kayıtları ekleyin, sonra `DOMAIN=alanadiniz.com` ile betiği tekrar çalıştırın.
 6. Otomatik yayın: `fly tokens create deploy -a APP` çıktısını GitHub deposunda **Settings → Secrets → Actions** altına `FLY_API_TOKEN` adıyla ekleyin. `main` dalına her push'ta `.github/workflows/fly-deploy.yml` yayınlar.
 
+**Betik yerine panelden (GitHub bağlantısıyla):** Fly panelinde Launch an App → GitHub deposu ve dal seçilir; bölge Frankfurt, bellek 512 MB; veritabanı olarak Fly Postgres, dosya deposu olarak Tigris eklenir. Secrets bölümüne `BUROS_PUBLIC_URL=https://APP.fly.dev`, `BUROS_ALLOWED_HOSTS=APP.fly.dev`, `BUROS_PLATFORM_ADMINS=eposta` girilir. Panel iki makine açarsa ikincisi veritabanı kilidi nedeniyle başlamaz; Machines sekmesinden silin. Yönetici, `BUROS_PLATFORM_ADMINS` e-postasıyla sitede üye olarak oluşur. Bu yolda GitHub Actions iş akışına gerek yoktur; ikisini birlikte kullanmayın.
+
 Notlar: Fly.io sunucuları yurt dışındadır (varsayılan Frankfurt); KVKK m.9 kapsamında yurt dışı aktarım için standart sözleşme ve Kurum'a bildirim gerekir, aydınlatma metninde `BUROS_HOSTING` buna göre doldurulmalıdır. Fly Postgres yedeklerini kendiniz de alın: `fly postgres connect` / `pg_dump`.
 
 ## Kendi sunucunuz (Docker Compose)

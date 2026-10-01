@@ -21,12 +21,19 @@ function fileBackend(root){
  };
 }
 
-async function pgBackend(url){
+async function pgBackend(url,exclusive=true){
  const {Pool}=require('pg');
  const ssl=/sslmode=(require|verify)/.test(url)||process.env.DATABASE_SSL==='1'?{rejectUnauthorized:process.env.DATABASE_SSL_INSECURE!=='1'}:undefined;
  const pool=new Pool({connectionString:url.replace(/[?&]sslmode=[^&]*/,''),ssl,max:Number(process.env.DATABASE_POOL)||10});
  await pool.query(`create table if not exists buros_records(kind text not null,id text not null,data jsonb not null,updated_at timestamptz not null default now(),primary key(kind,id));
   create table if not exists buros_workspaces(space_id text primary key,revision integer not null default 0,data jsonb not null,updated_at timestamptz not null default now());`);
+ // Only one application instance may own the data (it is cached in memory). A session-level
+ // advisory lock enforces that; during a deploy the new instance waits for the old one to stop.
+ const lock=await pool.connect(),waitUntil=Date.now()+(Number(process.env.BUROS_LOCK_WAIT)||90)*1000;
+ while(exclusive&&!(await lock.query('select pg_try_advisory_lock(7310021) as ok')).rows[0].ok){
+  if(Date.now()>waitUntil){lock.release();await pool.end();throw Error('Bu veritabanını başka bir bürOS örneği kullanıyor. Yalnızca tek makine çalıştırın (fly scale count 1).');}
+  console.warn('[depolama] Başka bir örnek çalışıyor, kilit bekleniyor...');await new Promise(r=>setTimeout(r,3000));
+ }
  const last=new Map();// kind -> Map(id -> serialized) so only changed rows are written
  return {kind:'postgres',pool,
   async loadCollection(name){const r=await pool.query('select id,data from buros_records where kind=$1 order by updated_at desc, id',[name]);last.set(name,new Map(r.rows.map(x=>[x.id,JSON.stringify(x.data)])));return r.rows.map(x=>x.data);},
@@ -45,7 +52,7 @@ async function pgBackend(url){
   async saveDoc(name,value){await pool.query("insert into buros_records(kind,id,data,updated_at) values('doc',$1,$2::jsonb,now()) on conflict(kind,id) do update set data=excluded.data,updated_at=now()",[name,JSON.stringify(value)]);},
   async loadWorkspace(id){const r=await pool.query('select data from buros_workspaces where space_id=$1',[id]);return r.rows[0]?.data??null;},
   async saveWorkspace(id,state){await pool.query('insert into buros_workspaces(space_id,revision,data,updated_at) values($1,$2,$3::jsonb,now()) on conflict(space_id) do update set revision=excluded.revision,data=excluded.data,updated_at=now()',[id,state.revision||0,JSON.stringify(state)]);},
-  async close(){await pool.end();}
+  async close(){lock.release();await pool.end();}
  };
 }
 
@@ -99,9 +106,9 @@ function s3FromEnv(e=process.env){
  const region=e.S3_REGION||e.AWS_REGION||'auto';
  return {bucket,endpoint:e.S3_ENDPOINT||e.AWS_ENDPOINT_URL_S3||`https://s3.${region==='auto'?'eu-central-1':region}.amazonaws.com`,region,accessKeyId:e.S3_ACCESS_KEY_ID||e.AWS_ACCESS_KEY_ID,secretAccessKey:e.S3_SECRET_ACCESS_KEY||e.AWS_SECRET_ACCESS_KEY,prefix:e.S3_PREFIX||''};
 }
-async function createStorage({root,databaseUrl=process.env.DATABASE_URL,s3=s3FromEnv()}={}){
+async function createStorage({root,exclusive=true,databaseUrl=process.env.DATABASE_URL,s3=s3FromEnv()}={}){
  fs.mkdirSync(root,{recursive:true});
- const backend=databaseUrl?await pgBackend(databaseUrl):fileBackend(root);
+ const backend=databaseUrl?await pgBackend(databaseUrl,exclusive):fileBackend(root);
  const files=s3?s3Files(s3):diskFiles(root);
  const data={},docs={},queues=new Map();let pending=Promise.resolve(),failures=0;
  for(const name of COLLECTIONS)data[name]=await backend.loadCollection(name);

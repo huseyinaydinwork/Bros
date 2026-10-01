@@ -9,7 +9,7 @@ const {createStorage}=require('../storage.cjs');
 const args=process.argv.slice(2),reset=args.includes('--reset-password'),[email,name]=args.filter(a=>a!=='--reset-password');
 if(!email||!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){console.error('Kullanım: node scripts/create-admin.cjs eposta@ornek.com ["Ad Soyad"] [--reset-password]');process.exit(1);}
 (async()=>{
- const storage=await createStorage({root:process.env.BUROS_DATA_DIR||path.join(__dirname,'..','.buros')});
+ const storage=await createStorage({exclusive:false,root:process.env.BUROS_DATA_DIR||path.join(__dirname,'..','.buros')});
  const accounts=storage.collection('accounts'),now=new Date().toISOString(),mail=email.trim().toLowerCase();
  const password=crypto.randomBytes(12).toString('base64url'),salt=crypto.randomBytes(16).toString('hex'),hash=crypto.scryptSync(password,salt,64).toString('hex');
  let a=accounts.find(x=>x.email===mail),created=false;

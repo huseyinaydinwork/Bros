@@ -11,7 +11,7 @@ const {migrateLegacy}=require('../auth.cjs');
  if(!fs.existsSync(root))throw Error(`Veri klasörü bulunamadı: ${root}`);
  migrateLegacy(root);
  const source=await createStorage({root,databaseUrl:null,s3:null});
- const target=await createStorage({root});
+ const target=await createStorage({root,exclusive:false});
  for(const name of ['accounts','spaces','leads','outbox','sessions']){
   const rows=source.collection(name),into=target.collection(name);
   if(name==='leads')for(const l of rows)l.id??=require('node:crypto').randomUUID();
