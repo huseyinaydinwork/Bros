@@ -42,7 +42,14 @@ docker compose logs -f app
 
 ## 3. İlk yönetici
 
-Üretimde bilinen parolalı hiçbir hesap yoktur (`npm run demo` üretimde çalışmaz). `.env` içindeki `BUROS_PLATFORM_ADMINS` listesinde yazan e-postayla sitede normal şekilde **üye olun**; bu hesap `/admin` paneline girebilir. Liste değişince `docker compose up -d` ile uygulamayı yeniden başlatın.
+Üretimde bilinen parolalı hiçbir hesap yoktur (`npm run demo` üretimde çalışmaz). Yönetici hesabını iki yoldan biriyle açın:
+
+```sh
+# Hesabı doğrudan oluşturur, rastgele geçici parolayı bir kez yazdırır
+docker compose exec app node scripts/create-admin.cjs huseyinaydinwork@gmail.com "Hüseyin Aydın"
+```
+
+ya da `.env` içindeki `BUROS_PLATFORM_ADMINS` listesine e-postanızı yazıp sitede normal şekilde üye olun. Her iki yolla da hesap `/admin` paneline girebilir. Geçici parolayı ilk girişten sonra Ayarlar → Profil bölümünden değiştirin; parolayı unutursanız komutu `--reset-password` ile tekrar çalıştırın.
 
 ## 4. Güncelleme
 

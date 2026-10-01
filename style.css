@@ -1043,3 +1043,30 @@ a.nav-item{text-decoration:none}
 @keyframes splash-zoom{0%{transform:scale(.55);opacity:0}45%{transform:scale(1.12);opacity:1}70%{transform:scale(.96)}100%{transform:scale(1)}}
 @keyframes splash-zoom-out{to{transform:scale(1.6);opacity:0}}
 @keyframes splash-out{to{opacity:0;visibility:hidden}}
+
+/* Notification bell and panel */
+.bell-button{position:relative;display:inline-grid;place-items:center;width:36px;height:36px;border:1px solid var(--border);border-radius:10px;background:var(--surface);color:var(--text-2);transition:border-color .15s,color .15s,background .15s}
+.bell-button:hover,.bell-button[aria-expanded=true]{border-color:var(--border-strong);color:var(--text);background:var(--surface-2)}
+.bell-button .icon{width:17px;height:17px}
+.bell-button .notification-count{top:-6px;right:-7px;min-width:18px;height:18px;padding:0 5px;border-radius:9px;font:700 10px/14px var(--font-body);border:2px solid var(--bg)}
+.notif-menu{right:var(--gutter,24px);top:58px;width:340px;padding:0;overflow:hidden;display:flex;flex-direction:column;max-height:min(480px,calc(100dvh - 80px))}
+.notif-menu[hidden]{display:none}
+.notif-head{display:flex;align-items:baseline;justify-content:space-between;gap:12px;padding:14px 16px 12px;border-bottom:1px solid var(--border)}
+.notif-head b{font-size:14px}.notif-head small{color:var(--text-3);font-size:12px}
+.notif-list{overflow-y:auto;padding:6px;scrollbar-width:thin;scrollbar-color:transparent transparent}
+.notif-list:hover{scrollbar-color:var(--border-strong) transparent}
+.notif-list::-webkit-scrollbar{width:6px}.notif-list::-webkit-scrollbar-thumb{background:transparent;border:0;border-radius:3px}.notif-list:hover::-webkit-scrollbar-thumb{background:var(--border-strong)}
+.notif-group{display:flex;justify-content:space-between;padding:10px 10px 6px;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--text-3)}
+.notif-group span{font-weight:600;letter-spacing:0}
+.notif-item{display:flex;align-items:center;gap:12px;width:100%;padding:8px 10px;border-radius:10px;text-align:left;color:var(--text)}
+.notif-item:hover,.notif-item:focus-visible{background:var(--surface-2)}
+.notif-item>span:last-child{display:flex;flex-direction:column;min-width:0}
+.notif-item b{font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.notif-item small{font-size:12px;color:var(--text-3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.notif-item .agenda-date{flex:none}
+.notif-empty{display:flex;flex-direction:column;align-items:center;gap:8px;padding:28px 16px;color:var(--text-3);font-size:13px;text-align:center}
+.notif-empty .icon{color:var(--sage-600)}
+.notif-foot{display:flex;align-items:center;justify-content:center;gap:6px;padding:11px;border-top:1px solid var(--border);font-size:13px;font-weight:600;color:var(--text-2)}
+.notif-foot:hover{color:var(--text);background:var(--surface-2)}
+@media(max-width:560px){.notif-menu{left:12px;right:12px;width:auto}}
+#modal,#drawer,.popover{scrollbar-width:thin;scrollbar-color:var(--border-strong) transparent}
