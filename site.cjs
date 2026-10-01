@@ -27,7 +27,7 @@ const FIELDS=[
 const BY_KEY=Object.fromEntries(FIELDS.map(f=>[f.key,f]));
 function clean(input){
  const out={};
- for(const [k,v] of Object.entries(input||{})){const f=BY_KEY[k];if(!f||typeof v!=='string')continue;const s=v.replace(/\r/g,'').trim().slice(0,f.max);if(s!==f.default)out[k]=s;}
+ for(const [k,v] of Object.entries(input||{})){const f=BY_KEY[k];if(!f||typeof v!=='string')continue;const s=v.replace(/\r/g,'').trim().slice(0,f.max);if(s&&s!==f.default)out[k]=s;}
  return out;
 }
 module.exports={FIELDS,clean};
