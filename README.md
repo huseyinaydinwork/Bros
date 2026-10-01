@@ -61,7 +61,7 @@ Pazarlama e-postaları yalnızca izin veren kişilere gider ve her birinde abone
 
 ### Yasal sayfa
 
-`/hukuki.html`: KVKK aydınlatma metni, gizlilik politikası, çerez politikası ve kullanım koşulları. Metinler taslaktır; köşeli parantezli alanlar şirket bilgileriyle doldurulmalı ve yayından önce hukuk danışmanı tarafından gözden geçirilmelidir.
+`/hukuki`: KVKK aydınlatma metni, ticari elektronik ileti onayı, gizlilik ve güvenlik politikası, çerez politikası, kullanım koşulları (abonelik sözleşmesi), veri işleme sözleşmesi ve ilgili kişi başvurusu. Şirket unvanı, adres, MERSİS, KEP, e-posta adresleri, barındırma ve e-posta sağlayıcısı ile yetkili mahkeme `BUROS_COMPANY`, `BUROS_COMPANY_ADDRESS` vb. ortam değişkenlerinden doldurulur (liste: `DEPLOY.md`). Eksik alanlar sayfada işaretli görünür. Yayından önce hukuk danışmanına onaylatın.
 
 ### Marka
 

@@ -90,10 +90,13 @@ DATABASE_URL=postgres://... BUROS_DATA_DIR=/eski/.buros node scripts/migrate-to-
 | `S3_BUCKET`, `S3_ENDPOINT`, `S3_REGION`, `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY`, `S3_PREFIX` | Dosyaları S3 uyumlu depoda tutmak için. R2 örneği: `S3_ENDPOINT=https://HESAPID.r2.cloudflarestorage.com`, `S3_REGION=auto`. |
 | `SESSION_HOURS` | Oturum süresi (saat), varsayılan 168. |
 | `BUROS_ALLOWED_HOSTS` | Alan adına ek olarak kabul edilecek host adları. |
+| `BUROS_COMPANY`, `BUROS_COMPANY_SHORT`, `BUROS_COMPANY_ADDRESS`, `BUROS_MERSIS`, `BUROS_KEP`, `BUROS_KVKK_EMAIL`, `BUROS_SUPPORT_EMAIL`, `BUROS_HOSTING`, `BUROS_MAIL_SERVICE`, `BUROS_COURT` | `/hukuki` sayfasındaki şirket bilgileri. Eksik olanlar sayfada işaretli görünür ve sayfanın başında eksik değişkenler listelenir. |
+| `BUROS_RETENTION_DAYS`, `BUROS_LEGAL_DATE` | Abonelik bitince verilerin tutulduğu gün (varsayılan 90) ve metinlerin yürürlük tarihi. |
 | `TRUST_PROXY` | Üretimde varsayılan açık; `X-Forwarded-For` başlığına güvenilir. Uygulamayı vekil olmadan doğrudan internete açmayın. |
 
 ## 8. Sınırlar ve yapılacaklar
 
 - Uygulama tek örnek (instance) olarak çalışacak şekilde tasarlanmıştır; veriler bellekte tutulup veritabanına yazılır. Yatay ölçekleme (birden çok `app`) desteklenmez.
 - Online ödeme (iyzico / PayTR / Stripe) bağlı değildir; planlar yönetim panelinden elle etkinleştirilir. Ödeme için üye işyeri hesabı gerekir.
-- `/hukuki.html` metinleri taslaktır; köşeli parantezli alanları doldurup hukuk danışmanına onaylatın. VERBİS kaydı yükümlülüğünüzü kontrol edin.
+- `/hukuki` metinleri sistemin gerçek davranışına göre yazılmıştır (KVKK aydınlatma, ticari ileti onayı, gizlilik, çerez, kullanım koşulları, veri işleme sözleşmesi, başvuru). Şirket bilgileri ortam değişkenlerinden gelir. Yayından önce bir hukuk danışmanına onaylatın; VERBİS kaydı yükümlülüğünüzü kontrol edin; tüketicilere ticari ileti gönderecekseniz İYS'ye kaydolun.
+- Metinlerdeki taahhütlerin bir kısmı işletme süreci gerektirir: abonelik bitiminden `BUROS_RETENTION_DAYS` gün sonra çalışma alanının silinmesi ve hesap silme talepleri şimdilik elle (yönetim paneli / veritabanı) yapılır; günlük yedek için `scripts/backup.sh` cron'a eklenmelidir.

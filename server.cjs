@@ -167,7 +167,18 @@ async function adminRoutes(route,method,url,req,res,me){
  if(route==='/api/admin/preview'&&method==='POST'){const v=await readJson(req,32768);const a=accounts.find(x=>x.id===me.id);res.writeHead(200,{'Content-Type':'text/html; charset=utf-8'});return res.end(mailer.preview(mailer.fill(v.body,{ad:(a.name||'').split(' ')[0],ad_soyad:a.name,eposta:a.email,firma:'Örnek Mimarlık',uygulama:`${publicUrl()}/app`,deneme_bitis:new Date(Date.now()+14*DAY).toLocaleDateString('tr-TR',{day:'numeric',month:'long',year:'numeric'}),kalan_gun:'3',davet_eden:a.name,davet_linki:`${publicUrl()}/app#davet=ornek`}),{unsubscribeUrl:v.kind==='marketing'?`${publicUrl()}/abonelik?t=ornek`:''}));}
  return json(res,404,{error:'Bulunamadı.'});
 }
-function serveStatic(url,req,res){const file=publicFiles[url.pathname];if(!file||!['GET','HEAD'].includes(req.method))return json(res,404,{error:'Bulunamadı.'});const type=file.endsWith('.css')?'text/css':file.endsWith('.js')||file.endsWith('.mjs')?'text/javascript':file.endsWith('.svg')?'image/svg+xml':'text/html';res.writeHead(200,{'Content-Type':type+'; charset=utf-8','Cache-Control':'no-cache'});if(req.method==='HEAD')return res.end();fs.createReadStream(path.join(__dirname,file)).on('error',()=>res.end()).pipe(res);}
+// Legal page: company details come from the environment so the texts never need hand editing.
+// Anything missing stays visibly marked and the page shows a draft notice naming the variables.
+const LEGAL_FIELDS={SIRKET:['BUROS_COMPANY','Şirket unvanı'],ADRES:['BUROS_COMPANY_ADDRESS','Adres'],MERSIS:['BUROS_MERSIS','MERSİS no'],KEP:['BUROS_KEP','KEP adresi'],KVKK_EPOSTA:['BUROS_KVKK_EMAIL','kvkk@alanadiniz.com'],DESTEK_EPOSTA:['BUROS_SUPPORT_EMAIL','destek@alanadiniz.com'],BARINDIRMA:['BUROS_HOSTING','Barındırma sağlayıcısı ve ülkesi'],EPOSTA_SAGLAYICI:['BUROS_MAIL_SERVICE','E-posta sağlayıcısı ve ülkesi'],YETKILI_MAHKEME:['BUROS_COURT','İl (adliye)']};
+function legalPage(){
+ const esc=v=>String(v).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])),missing=[],hours=Number(process.env.SESSION_HOURS)||168;
+ const vals={GUNCELLEME:esc(process.env.BUROS_LEGAL_DATE||'1 Ekim 2026'),YIL:String(new Date().getFullYear()),SIRKET_KISA:esc(process.env.BUROS_COMPANY_SHORT||'bürOS'),SAKLAMA_GUN:String(Number(process.env.BUROS_RETENTION_DAYS)||90),OTURUM_SURESI:hours%24?hours+' saat':hours/24+' gün',ALAN_ADI:PUBLIC_URL?esc(new URL(PUBLIC_URL).host):'<mark>[alan adı]</mark>'};
+ for(const [k,[env,label]] of Object.entries(LEGAL_FIELDS)){const v=(process.env[env]||'').trim();if(v)vals[k]=esc(v);else{missing.push(env);vals[k]=`<mark>[${label}]</mark>`;}}
+ vals.TASLAK=missing.length?`<div class="draft"><b>Eksik bilgi.</b> İşaretli alanlar (<mark>[…]</mark>) sunucu ortam değişkenlerinden doldurulur: ${missing.map(m=>'<code>'+m+'</code>').join(', ')}. Yayından önce metinleri bir hukuk danışmanına gözden geçirtin.</div>`:'';
+ return fs.readFileSync(path.join(__dirname,'legal.html'),'utf8').replace(/\{\{([A-Z_]+)\}\}/g,(m,k)=>vals[k]??m);
+}
+function serveStatic(url,req,res){const file=publicFiles[url.pathname];if(!file||!['GET','HEAD'].includes(req.method))return json(res,404,{error:'Bulunamadı.'});
+ if(file==='legal.html'){res.writeHead(200,{'Content-Type':'text/html; charset=utf-8','Cache-Control':'no-cache'});return res.end(req.method==='HEAD'?undefined:legalPage());}const type=file.endsWith('.css')?'text/css':file.endsWith('.js')||file.endsWith('.mjs')?'text/javascript':file.endsWith('.svg')?'image/svg+xml':'text/html';res.writeHead(200,{'Content-Type':type+'; charset=utf-8','Cache-Control':'no-cache'});if(req.method==='HEAD')return res.end();fs.createReadStream(path.join(__dirname,file)).on('error',()=>res.end()).pipe(res);}
 // Starts the HTTP server. In production it binds 0.0.0.0 behind a reverse proxy that terminates TLS.
 async function start(port=Number(process.env.PORT)||3000){
  await init();

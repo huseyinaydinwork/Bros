@@ -35,6 +35,7 @@ article ul{padding-left:20px}
 table{width:100%;border-collapse:collapse;font-size:14px;margin:10px 0}
 th,td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--line);vertical-align:top}
 th{background:#f8f9f6;font-weight:600;font-size:12.5px;color:var(--muted)}
+code{font:12.5px ui-monospace,SFMono-Regular,Menlo,monospace;background:#f3e8cf;padding:1px 5px;border-radius:4px}
 mark{background:#eef2e4;color:var(--sage-d);padding:0 4px;border-radius:4px;font-weight:600}
 footer{border-top:1px solid var(--line);padding:26px clamp(18px,5vw,56px);color:var(--faint);font-size:13px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:12px;max-width:1180px;margin:0 auto}
 @media(max-width:860px){.layout{grid-template-columns:1fr}.toc{position:static;flex-direction:row;flex-wrap:wrap}.top nav{display:none}}
@@ -42,92 +43,189 @@ footer{border-top:1px solid var(--line);padding:26px clamp(18px,5vw,56px);color:
 </head>
 <body>
 <header class="top"><a href="./" aria-label="bürOS ana sayfa"><img src="brand/logo.svg" alt="bürOS"></a><nav><a href="./#fiyat">Planlar</a><a href="./#iletisim">Demo talebi</a><a href="app">Giriş yap</a></nav></header>
-<section class="hero"><h1>Yasal bilgiler</h1><p>Kişisel verilerinizi nasıl işlediğimizi, hangi çerezleri kullandığımızı ve bürOS hizmetinin kullanım koşullarını bu sayfada bulabilirsiniz.</p></section>
+<section class="hero"><h1>Yasal bilgiler</h1><p>Kişisel verilerinizi nasıl işlediğimizi, hangi çerezleri kullandığımızı ve bürOS hizmetinin hangi koşullarla sunulduğunu bu sayfada bulabilirsiniz. Metinler hizmetin gerçekte nasıl çalıştığına göre yazılmıştır; sistem değiştikçe güncellenir.</p></section>
 <div class="layout">
-<nav class="toc" aria-label="Bölümler"><a href="#kvkk">KVKK aydınlatma metni</a><a href="#gizlilik">Gizlilik politikası</a><a href="#cerez">Çerez politikası</a><a href="#kosullar">Kullanım koşulları</a><small>Son güncelleme: 29 Eylül 2026</small></nav>
+<nav class="toc" aria-label="Bölümler"><a href="#kvkk">KVKK aydınlatma metni</a><a href="#riza">Ticari ileti onayı</a><a href="#gizlilik">Gizlilik ve güvenlik</a><a href="#cerez">Çerez politikası</a><a href="#kosullar">Kullanım koşulları</a><a href="#veri-isleme">Veri işleme sözleşmesi</a><a href="#basvuru">Başvuru</a><small>Yürürlük: {{GUNCELLEME}}</small></nav>
 <main>
-<div class="draft"><b>Taslak metin.</b> İşaretli alanlar (<mark>[…]</mark>) şirket bilgilerinizle doldurulmalı ve yayına almadan önce bir hukuk danışmanı tarafından gözden geçirilmelidir.</div>
-
+{{TASLAK}}
 <article id="kvkk">
 <h2>KVKK aydınlatma metni</h2>
-<p class="meta">6698 sayılı Kişisel Verilerin Korunması Kanunu'nun 10. maddesi kapsamında</p>
+<p class="meta">6698 sayılı Kişisel Verilerin Korunması Kanunu (“KVKK”) m.10 ve Aydınlatma Yükümlülüğünün Yerine Getirilmesinde Uyulacak Usul ve Esaslar Hakkında Tebliğ kapsamında</p>
 <h3>1. Veri sorumlusu</h3>
-<p>Kişisel verileriniz, veri sorumlusu sıfatıyla <mark>[Şirket unvanı]</mark> (“bürOS”, “biz”) tarafından aşağıda açıklanan kapsamda işlenmektedir. Adres: <mark>[Adres]</mark> · MERSİS: <mark>[MERSİS no]</mark> · KEP: <mark>[KEP adresi]</mark> · E-posta: <mark>[kvkk@alanadiniz.com]</mark></p>
-<h3>2. İşlenen kişisel veriler</h3>
-<table><thead><tr><th>Kategori</th><th>Veriler</th></tr></thead><tbody>
-<tr><td>Kimlik</td><td>Ad, soyad, unvan</td></tr>
-<tr><td>İletişim</td><td>E-posta adresi, telefon numarası (isteğe bağlı), firma telefonu ve web sitesi</td></tr>
-<tr><td>Müşteri işlem</td><td>Çalışma alanı adı, sektör, ekip büyüklüğü, şehir, plan ve deneme bilgileri, davet kayıtları, plan ve demo talepleri</td></tr>
-<tr><td>İşlem güvenliği</td><td>Parola özeti (parolanın kendisi saklanmaz), oturum bilgisi, giriş zamanı, IP adresi, işlem kayıtları</td></tr>
-<tr><td>Pazarlama</td><td>“Bizi nereden duydunuz?” yanıtı, ticari elektronik ileti izni ve izin tarihi</td></tr>
-<tr><td>Kullanıcı içeriği</td><td>Çalışma alanına yüklediğiniz kayıt, müşteri, şantiye, finans ve dosya içerikleri. Bu içerikler bakımından çalışma alanını açan kuruluş veri sorumlusu, bürOS veri işleyendir.</td></tr>
+<p>Kişisel verileriniz, veri sorumlusu sıfatıyla {{SIRKET}} (“bürOS”, “biz”) tarafından bu metinde açıklanan kapsamda işlenir.</p>
+<table><tbody><tr><th>Unvan</th><td>{{SIRKET}}</td></tr><tr><th>Adres</th><td>{{ADRES}}</td></tr><tr><th>MERSİS no</th><td>{{MERSIS}}</td></tr><tr><th>KEP adresi</th><td>{{KEP}}</td></tr><tr><th>Kişisel veri başvuruları</th><td>{{KVKK_EPOSTA}}</td></tr></tbody></table>
+<h3>2. Bu metin kimleri kapsar</h3>
+<p>bürOS'a üye olan kullanıcılar, bir çalışma alanına davet edilen kişiler, tanıtım sayfasından demo talebi gönderen kişiler ve bizimle e-posta yoluyla yazışan kişiler. Müşterilerimizin bürOS'a kendi işleri için girdiği kişisel veriler (örneğin bir büronun kendi müşterilerine ait bilgiler) bakımından veri sorumlusu ilgili müşteridir; bu veriler için aşağıdaki <a href="#veri-isleme">Veri işleme sözleşmesi</a> geçerlidir.</p>
+<h3>3. İşlenen kişisel veriler</h3>
+<table><thead><tr><th>Kategori</th><th>Veriler</th><th>Kaynak</th></tr></thead><tbody>
+<tr><td>Kimlik</td><td>Ad, soyad, unvan</td><td>Kayıt formu, profil ayarları</td></tr>
+<tr><td>İletişim</td><td>E-posta adresi, telefon numarası (isteğe bağlı), firma telefonu, web sitesi, şehir</td><td>Kayıt ve kurulum formları, demo talep formu</td></tr>
+<tr><td>Müşteri işlem</td><td>Çalışma alanı adı, faaliyet alanı, ekip büyüklüğü, plan ve deneme bilgileri, davetler, plan ve demo talepleri, destek yazışmaları</td><td>Uygulama içi işlemler, e-posta</td></tr>
+<tr><td>İşlem güvenliği</td><td>Parolanın tek yönlü özeti (parolanın kendisi saklanmaz), oturum anahtarının özeti, oturum başlangıç ve bitiş zamanı, son giriş zamanı, e-posta doğrulama ve parola sıfırlama kayıtları, kayıtlar üzerindeki işlem geçmişi (kim, neyi, ne zaman değiştirdi)</td><td>Uygulamanın kullanımı</td></tr>
+<tr><td>Pazarlama</td><td>“Bizi nereden duydunuz?” yanıtı, ticari elektronik ileti onayı ve onay tarihi, gönderilen e-postaların kaydı</td><td>Kayıt formu, ayarlar</td></tr>
 </tbody></table>
-<h3>3. İşleme amaçları ve hukuki sebepler</h3>
+<p>Özel nitelikli kişisel veri (sağlık, biyometrik, din, ceza mahkûmiyeti vb.) istemiyor ve işlemiyoruz. Uygulamaya bu tür veri yüklememenizi rica ederiz.</p>
+<h3>4. İşleme amaçları ve hukuki sebepler</h3>
+<table><thead><tr><th>Amaç</th><th>Hukuki sebep</th></tr></thead><tbody>
+<tr><td>Hesabın açılması, çalışma alanının kurulması ve hizmetin sunulması; deneme, abonelik ve faturalama süreçleri</td><td>Sözleşmenin kurulması ve ifası (KVKK m.5/2-c)</td></tr>
+<tr><td>Ekip daveti, e-posta doğrulama, parola sıfırlama, deneme süresi ve güvenlik bildirimleri</td><td>Sözleşmenin ifası (m.5/2-c)</td></tr>
+<tr><td>Fatura düzenlenmesi, ticari defter ve belgelerin saklanması, yetkili kurumların taleplerinin karşılanması</td><td>Kanunlarda öngörülme ve hukuki yükümlülük (m.5/2-a, m.5/2-ç)</td></tr>
+<tr><td>Hesap güvenliği, kötüye kullanımın ve yetkisiz erişimin önlenmesi, işlem geçmişinin tutulması</td><td>Meşru menfaat ve hukuki yükümlülük (m.5/2-f, m.5/2-ç)</td></tr>
+<tr><td>Demo taleplerinin yanıtlanması</td><td>Sözleşmenin kurulması öncesi talep (m.5/2-c)</td></tr>
+<tr><td>Ürünün geliştirilmesi, toplu kullanım istatistikleri</td><td>Meşru menfaat (m.5/2-f)</td></tr>
+<tr><td>Kampanya, ürün haberi ve bülten e-postaları</td><td>Açık rıza (m.5/1) ve 6563 sayılı Kanun kapsamında onay</td></tr>
+<tr><td>Uyuşmazlık halinde hakların korunması</td><td>Bir hakkın tesisi, kullanılması veya korunması (m.5/2-e)</td></tr>
+</tbody></table>
+<h3>5. Aktarım</h3>
+<p>Kişisel verileriniz yalnızca yukarıdaki amaçlar için gerekli olduğu ölçüde ve aşağıdaki alıcılara aktarılır:</p>
 <ul>
-<li>Hesabın açılması, çalışma alanının sunulması, deneme ve abonelik süreçlerinin yürütülmesi: sözleşmenin kurulması ve ifası (KVKK m.5/2-c).</li>
-<li>Hesap güvenliği, kötüye kullanımın önlenmesi, işlem kayıtlarının tutulması: hukuki yükümlülük ve meşru menfaat (m.5/2-ç, m.5/2-f).</li>
-<li>Hizmetle ilgili zorunlu bildirimler (davet, deneme süresi, güvenlik): sözleşmenin ifası (m.5/2-c).</li>
-<li>Ürün haberleri ve kampanya e-postaları: yalnızca açık rızanız ve 6563 sayılı Kanun kapsamındaki onayınız ile (m.5/1).</li>
-<li>Ürünün geliştirilmesi ve raporlama: meşru menfaat (m.5/2-f).</li>
+<li><b>Barındırma ve altyapı:</b> {{BARINDIRMA}}. Uygulama, veritabanı ve yüklenen dosyalar bu altyapıda tutulur.</li>
+<li><b>E-posta gönderimi:</b> {{EPOSTA_SAGLAYICI}}. Yalnızca e-postanın gönderilmesi için gereken alıcı adresi ve içerik iletilir.</li>
+<li><b>Muhasebe ve hukuk danışmanları,</b> sır saklama yükümlülüğü altında ve gerektiği ölçüde.</li>
+<li><b>Yetkili kamu kurum ve kuruluşları ile yargı mercileri,</b> kanuni yükümlülük halinde.</li>
 </ul>
-<h3>4. Aktarım</h3>
-<p>Kişisel verileriniz, hizmetin sunulması için gerekli olduğu ölçüde barındırma, e-posta gönderimi ve ödeme hizmeti aldığımız tedarikçilere (<mark>[tedarikçi listesi]</mark>) ve yasal zorunluluk halinde yetkili kurumlara aktarılabilir. Yurt dışına aktarım söz konusu olduğunda KVKK m.9'daki şartlara uyulur.</p>
-<h3>5. Toplama yöntemi</h3>
-<p>Veriler; kayıt ve kurulum formları, uygulama içi işlemler, demo talep formu ve e-posta yazışmaları aracılığıyla elektronik ortamda toplanır.</p>
-<h3>6. Haklarınız</h3>
-<p>KVKK m.11 uyarınca verilerinizin işlenip işlenmediğini öğrenme, bilgi talep etme, amacına uygun kullanılıp kullanılmadığını öğrenme, aktarıldığı üçüncü kişileri bilme, düzeltilmesini, silinmesini veya yok edilmesini isteme, otomatik sistemlerle analiz sonucu aleyhinize bir sonuç çıkmasına itiraz etme ve zararın giderilmesini talep etme haklarına sahipsiniz. Başvurularınızı <mark>[kvkk@alanadiniz.com]</mark> adresine veya yukarıdaki adrese yazılı olarak iletebilirsiniz; talepler en geç 30 gün içinde yanıtlanır.</p>
+<p>Yurt dışında bulunan bir alıcıya aktarım söz konusu olduğunda KVKK m.9'a uyulur: aktarım öncelikle yeterlilik kararı veya Kurul tarafından ilan edilen standart sözleşme gibi uygun güvencelerden birine dayanır; standart sözleşme imzalandığında Kurum'a bildirim yapılır. Tanıtım sayfası ve uygulama yazı tiplerini Google Fonts üzerinden yükler; bu sırada tarayıcınız Google sunucularına bağlanır ve IP adresiniz Google tarafından görülebilir.</p>
+<h3>6. Toplama yöntemi</h3>
+<p>Veriler; kayıt, kurulum, profil ve demo talep formları, uygulama içindeki işlemleriniz ve e-posta yazışmaları aracılığıyla, tamamen veya kısmen otomatik yollarla elektronik ortamda toplanır.</p>
+<h3>7. Saklama süreleri</h3>
+<table><thead><tr><th>Veri</th><th>Süre</th></tr></thead><tbody>
+<tr><td>Hesap bilgileri</td><td>Hesap açık olduğu sürece; hesabın kapatılmasından sonra uyuşmazlık zamanaşımı süresince (en fazla 10 yıl) erişimi kısıtlanmış olarak</td></tr>
+<tr><td>Çalışma alanı içeriği</td><td>Abonelik veya deneme süresince; sona erdikten sonra {{SAKLAMA_GUN}} gün salt okunur olarak, ardından silinir</td></tr>
+<tr><td>Fatura ve ödeme kayıtları</td><td>Vergi Usul Kanunu ve Türk Ticaret Kanunu uyarınca 10 yıl</td></tr>
+<tr><td>Oturum kayıtları</td><td>Oturum süresi ({{OTURUM_SURESI}}) dolunca silinir</td></tr>
+<tr><td>Parola sıfırlama ve doğrulama bağlantıları</td><td>Sıfırlama bağlantısı 1 saat, kullanıldığında hemen geçersiz olur</td></tr>
+<tr><td>Gönderilen e-postaların kaydı</td><td>En fazla 2 yıl</td></tr>
+<tr><td>Demo talepleri</td><td>Talebin sonuçlanmasından itibaren 1 yıl</td></tr>
+<tr><td>Yedekler</td><td>Yedek kopyalar 14 gün içinde kendiliğinden döner; silinen veri bu süre sonunda yedeklerden de çıkar</td></tr>
+</tbody></table>
+<p>Süresi dolan veriler Kişisel Verilerin Silinmesi, Yok Edilmesi veya Anonim Hale Getirilmesi Hakkında Yönetmelik'e uygun olarak, ilk periyodik imha döneminde (en geç 6 ay içinde) silinir veya anonim hale getirilir.</p>
+<h3>8. Haklarınız</h3>
+<p>KVKK m.11 uyarınca; kişisel verilerinizin işlenip işlenmediğini öğrenme, işlenmişse bilgi talep etme, işlenme amacını ve amacına uygun kullanılıp kullanılmadığını öğrenme, yurt içinde veya yurt dışında aktarıldığı üçüncü kişileri bilme, eksik veya yanlış işlenmişse düzeltilmesini isteme, KVKK m.7 kapsamında silinmesini veya yok edilmesini isteme, bu işlemlerin aktarıldığı üçüncü kişilere bildirilmesini isteme, münhasıran otomatik sistemlerle analiz edilmesi sonucu aleyhinize bir sonucun ortaya çıkmasına itiraz etme ve kanuna aykırı işleme nedeniyle zarara uğramanız halinde zararın giderilmesini talep etme haklarına sahipsiniz. Başvuru yolları <a href="#basvuru">Başvuru</a> bölümünde açıklanmıştır.</p>
+</article>
+
+<article id="riza">
+<h2>Ticari elektronik ileti onayı</h2>
+<p class="meta">KVKK m.5/1, 6563 sayılı Elektronik Ticaretin Düzenlenmesi Hakkında Kanun ve Ticari İletişim ve Ticari Elektronik İletiler Hakkında Yönetmelik kapsamında</p>
+<p>Kayıt formundaki veya Ayarlar → Bildirimler bölümündeki “ürün haberleri ve kampanyalar” seçeneğini işaretlediğinizde; {{SIRKET}} tarafından ad, soyad, e-posta adresi ve çalışma alanı bilgilerinizin, bürOS'un yeni özellikleri, kampanyaları, etkinlikleri ve bültenleri hakkında size e-posta gönderilmesi amacıyla işlenmesine ve bu amaçla e-posta gönderim hizmeti aldığımız tedarikçiye aktarılmasına açık rıza vermiş ve ticari elektronik ileti almayı kabul etmiş olursunuz.</p>
+<ul>
+<li>Onay vermek isteğe bağlıdır; vermemeniz hizmetten yararlanmanızı etkilemez. Seçenek varsayılan olarak işaretsizdir.</li>
+<li>Onayınızı istediğiniz an, her e-postanın altındaki “abonelikten çık” bağlantısıyla veya Ayarlar → Bildirimler bölümünden geri alabilirsiniz. Ret bildirimi en geç 3 iş günü içinde işleme alınır.</li>
+<li>Hesabınızla ilgili zorunlu bildirimler (davet, e-posta doğrulama, parola sıfırlama, deneme süresi, güvenlik ve fatura bildirimleri) ticari ileti sayılmaz ve onayınızdan bağımsız olarak gönderilir.</li>
+<li>Onay kaydınız ve tarihi, onayın geri alınmasından itibaren 3 yıl saklanır. Gerekli hallerde onaylar İleti Yönetim Sistemi'ne (İYS) kaydedilir.</li>
+</ul>
 </article>
 
 <article id="gizlilik">
-<h2>Gizlilik politikası</h2>
+<h2>Gizlilik ve güvenlik politikası</h2>
 <p class="meta">Verilerinizi nasıl koruduğumuz</p>
 <h3>Çalışma alanlarının ayrımı</h3>
-<p>Her çalışma alanının kayıtları, dosyaları, ekibi ve izinleri diğer çalışma alanlarından ayrı tutulur. Bir kişi yalnızca üye olduğu çalışma alanına, yöneticinin tanımladığı kapsamda erişebilir; bu kontrol sunucu tarafında yapılır.</p>
+<p>Her çalışma alanının kayıtları, dosyaları, ekibi ve izinleri diğer çalışma alanlarından ayrı tutulur. Bir kişi yalnızca üye olduğu çalışma alanına ve yöneticinin tanımladığı müşteri ve şantiyelere erişebilir. Erişim kontrolü tarayıcıda değil sunucuda yapılır; yetkisi olmayan kişiye veri hiç gönderilmez.</p>
 <h3>Parolalar ve oturumlar</h3>
-<p>Parolalar yalnızca tek yönlü özet (scrypt) olarak saklanır. Oturum çerezi HttpOnly ve SameSite=Strict olarak ayarlanır; tarayıcıdaki betikler tarafından okunamaz.</p>
-<h3>E-postalar</h3>
-<p>Hesabınızla ilgili zorunlu bildirimler (ekip daveti, deneme süresi, güvenlik) her zaman gönderilir. Kampanya ve bülten e-postaları yalnızca izin verdiyseniz gönderilir ve her e-postada tek tıkla abonelikten çıkma bağlantısı bulunur. İzninizi uygulamada <b>Ayarlar → Bildirimler</b> bölümünden de değiştirebilirsiniz.</p>
-<h3>Saklama süresi</h3>
-<p>Hesap verileri hesabınız açık olduğu sürece saklanır. Abonelik sona erdiğinde çalışma alanı verileri <mark>[süre]</mark> boyunca saklanır, ardından silinir. Yasal saklama yükümlülüğü olan kayıtlar ilgili mevzuatta öngörülen süre boyunca tutulur.</p>
-<h3>Verilerin dışa aktarılması</h3>
-<p>Çalışma alanı yöneticisi, kayıtları istediği an tek dosya olarak dışa aktarabilir.</p>
+<p>Parolalar yalnızca tuzlanmış tek yönlü özet (scrypt) olarak saklanır; çalışanlarımız dahil kimse parolanızı göremez. Oturum anahtarı sunucuda yalnızca özet olarak tutulur. Oturum çerezi HttpOnly, SameSite=Lax ve Secure olarak ayarlanır; tarayıcıdaki betikler tarafından okunamaz ve yalnızca şifreli bağlantı üzerinden gönderilir. Parolanızı değiştirdiğinizde veya sıfırladığınızda tüm açık oturumlar kapanır. Giriş, kayıt ve parola sıfırlama denemeleri hız sınırına tabidir.</p>
+<h3>İletim ve altyapı</h3>
+<p>Tüm trafik TLS (HTTPS) ile şifrelenir ve tarayıcılara HSTS ile yalnızca şifreli bağlantı kullanmaları bildirilir. Uygulama sıkı bir içerik güvenliği politikası (CSP) ile sunulur. Veritabanı internete açık değildir; yalnızca uygulama sunucusu erişebilir.</p>
+<h3>Yedekleme</h3>
+<p>Veritabanı ve dosyalar her gün yedeklenir; yedekler 14 gün saklanır ve dönüşümlü olarak silinir.</p>
+<h3>Ekibimizin erişimi</h3>
+<p>Platform yöneticilerimiz hesap ve çalışma alanı düzeyindeki bilgileri (kullanıcı listesi, plan ve deneme durumu, proje sayısı) destek ve faturalama için görebilir. Çalışma alanınızın içeriğine yalnızca sizin talebiniz üzerine destek amacıyla veya kanuni zorunluluk halinde erişilir.</p>
+<h3>Veri ihlali</h3>
+<p>Bir veri ihlalini öğrendiğimizde, ihlali en kısa sürede ve en geç 72 saat içinde Kişisel Verileri Koruma Kurulu'na bildirir, etkilenen kişilere ve müşterilerimize makul en kısa sürede haber veririz.</p>
+<h3>Verilerinizi dışa aktarma ve hesap silme</h3>
+<p>Çalışma alanı yöneticisi tüm kayıtları istediği an Ayarlar → Çalışma alanı bölümünden tek dosya olarak dışa aktarabilir. Hesabınızın veya çalışma alanınızın silinmesini {{DESTEK_EPOSTA}} adresinden talep edebilirsiniz; talepler en geç 30 gün içinde yerine getirilir.</p>
+<h3>Çocuklar</h3>
+<p>bürOS işletmelere yönelik bir hizmettir; 18 yaşından küçüklerin hesap açmasına yönelik değildir.</p>
 </article>
 
 <article id="cerez">
 <h2>Çerez politikası</h2>
-<p class="meta">bürOS reklam veya takip çerezi kullanmaz</p>
+<p class="meta">bürOS reklam, analiz veya takip çerezi kullanmaz</p>
+<p>Yalnızca hizmetin çalışması için zorunlu olan bir çerez ve tercihlerinizi hatırlamak için tarayıcınızın yerel depolama alanı kullanılır. Bunlar KVKK kapsamında açık rıza gerektirmeyen, hizmetin sunulması için zorunlu kayıtlardır; bu nedenle çerez onay penceresi gösterilmez.</p>
 <table><thead><tr><th>Ad</th><th>Tür</th><th>Amaç</th><th>Süre</th></tr></thead><tbody>
-<tr><td>buros_session</td><td>Zorunlu çerez</td><td>Oturumunuzu açık tutar</td><td>12 saat</td></tr>
-<tr><td>buros-theme, buros-font, buros-sidebar, buros-density, buros-home</td><td>Yerel depolama</td><td>Tema, yazı tipi ve görünüm tercihlerinizi bu tarayıcıda hatırlar</td><td>Siz silene kadar</td></tr>
+<tr><td>buros_session</td><td>Zorunlu, birinci taraf çerez</td><td>Oturumunuzu açık tutar</td><td>{{OTURUM_SURESI}} veya oturumu kapatana kadar</td></tr>
+<tr><td>buros-theme, buros-font, buros-sidebar, buros-density, buros-home</td><td>Yerel depolama</td><td>Tema, yazı tipi ve görünüm tercihlerinizi bu tarayıcıda hatırlar; sunucuya gönderilmez</td><td>Siz silene kadar</td></tr>
+<tr><td>buros-waitlist</td><td>Yerel depolama</td><td>Tanıtım sayfasındaki demo talebinizin gönderildiğini hatırlar</td><td>Siz silene kadar</td></tr>
 <tr><td>buros-invite</td><td>Oturum depolaması</td><td>Davet bağlantısını kayıt tamamlanana kadar tutar</td><td>Sekme kapanana kadar</td></tr>
 </tbody></table>
-<p>Yazı tipleri Google Fonts üzerinden yüklenir; bu sırada tarayıcınız Google sunucularına bağlanır. Zorunlu çerez olmadan oturum açılamaz; yerel depolamayı tarayıcı ayarlarınızdan silebilirsiniz.</p>
+<p>Yazı tipleri Google Fonts üzerinden yüklenir; Google bu sırada kendi sunucu kayıtlarını tutabilir. Zorunlu çerez olmadan oturum açılamaz. Yerel depolamayı tarayıcınızın ayarlarından istediğiniz an silebilirsiniz; bu durumda tercihleriniz varsayılana döner.</p>
 </article>
 
 <article id="kosullar">
 <h2>Kullanım koşulları</h2>
-<p class="meta">bürOS hizmetini kullanarak bu koşulları kabul etmiş olursunuz</p>
-<h3>1. Hizmet</h3>
-<p>bürOS; mimarlık, mühendislik ve inşaat bürolarının müşteri, şantiye, evrak, iş akışı, dosya ve finans kayıtlarını yönetmesi için sunulan bulut tabanlı bir yazılım hizmetidir.</p>
-<h3>2. Hesap ve çalışma alanı</h3>
-<p>Hesap açan kişi verdiği bilgilerin doğruluğundan ve parolasının gizliliğinden sorumludur. Çalışma alanını kuran kişi o alanın yöneticisidir; ekibe kimin katılacağına ve hangi kayıtları göreceğine yönetici karar verir.</p>
-<h3>3. Deneme süresi</h3>
-<p>Her yeni çalışma alanı 14 günlük ücretsiz deneme ile başlar ve kredi kartı gerektirmez. Deneme sonunda plan seçilmezse çalışma alanı salt okunur hale gelir; kayıtlar silinmez.</p>
-<h3>4. Abonelik ve ödeme</h3>
-<p>Ücretli planlar kullanıcı başına aylık veya yıllık faturalandırılır; fiyatlara KDV dahil değildir. Plan değişiklikleri bir sonraki faturalama döneminde geçerli olur. <mark>[İade ve cayma koşulları]</mark></p>
-<h3>5. İçeriğin sahipliği</h3>
-<p>Çalışma alanına yüklenen tüm kayıt ve dosyalar müşteriye aittir. bürOS bu içerikleri yalnızca hizmeti sunmak amacıyla işler.</p>
-<h3>6. Kabul edilebilir kullanım</h3>
-<p>Hizmet; hukuka aykırı içerik barındırmak, başkalarının haklarını ihlal etmek, sistemin güvenliğini tehlikeye atmak veya hizmeti tersine mühendislikle kopyalamak için kullanılamaz.</p>
-<h3>7. Sorumluluğun sınırlandırılması</h3>
-<p>bürOS hizmetin kesintisiz sunulması için makul özeni gösterir. Kurumsal plan dışında belirli bir hizmet seviyesi taahhüdü verilmez. Dolaylı zararlardan sorumluluk, yürürlükteki mevzuatın izin verdiği ölçüde sınırlıdır.</p>
-<h3>8. Fesih</h3>
-<p>Aboneliğinizi istediğiniz zaman sonlandırabilirsiniz. Koşulların ağır ihlali halinde hesap askıya alınabilir. Fesih öncesinde verilerinizi dışa aktarabilirsiniz.</p>
-<h3>9. Uygulanacak hukuk</h3>
-<p>Bu koşullar Türkiye Cumhuriyeti hukukuna tabidir. Uyuşmazlıklarda <mark>[İstanbul]</mark> mahkemeleri ve icra daireleri yetkilidir.</p>
+<p class="meta">Abonelik sözleşmesi · bürOS'a üye olarak bu koşulları kabul etmiş olursunuz</p>
+<h3>1. Taraflar ve kapsam</h3>
+<p>Bu koşullar {{SIRKET}} (“bürOS”) ile bürOS'a üye olan kişi ve adına çalışma alanı kurulan kuruluş (“Müşteri”) arasında, {{ALAN_ADI}} üzerinden sunulan hizmetin kullanımını düzenler. Bir kuruluş adına üye olan kişi, o kuruluşu bu koşullarla bağlamaya yetkili olduğunu kabul eder.</p>
+<h3>2. Hizmet</h3>
+<p>bürOS; mimarlık, mühendislik ve inşaat bürolarının müşteri, şantiye, evrak, iş akışı, takvim, dosya ve finans kayıtlarını yönetmesi için internet üzerinden sunulan bir yazılım hizmetidir (SaaS). Hizmet olduğu gibi ve mevcut haliyle sunulur; özellikler geliştirilebilir, değiştirilebilir veya kaldırılabilir. Müşterinin aktif olarak kullandığı temel bir özelliğin kaldırılması en az 30 gün önce bildirilir.</p>
+<h3>3. Hesap ve çalışma alanı</h3>
+<ul>
+<li>Üye olan kişi verdiği bilgilerin doğruluğundan, parolasının gizliliğinden ve hesabı üzerinden yapılan işlemlerden sorumludur. Yetkisiz kullanım fark edildiğinde derhal bildirilmelidir.</li>
+<li>Çalışma alanını kuran kişi o alanın yöneticisidir; ekibe kimin katılacağına, kimin hangi müşteri ve şantiyeyi göreceğine yönetici karar verir. Ekip üyelerinin işlemlerinden Müşteri sorumludur.</li>
+<li>Bir hesap birden fazla çalışma alanına üye olabilir; her çalışma alanı ayrı bir abonelik konusudur.</li>
+</ul>
+<h3>4. Deneme süresi</h3>
+<p>Her yeni çalışma alanı 14 günlük ücretsiz deneme ile başlar; kredi kartı istenmez ve deneme sonunda kendiliğinden ücretli plana geçilmez. Deneme sonunda plan seçilmezse çalışma alanı salt okunur hale gelir; kayıtlar silinmez, {{SAKLAMA_GUN}} gün boyunca görüntülenebilir ve dışa aktarılabilir.</p>
+<h3>5. Abonelik, ücret ve ödeme</h3>
+<ul>
+<li>Ücretli planlar aylık veya yıllık olarak, peşin ödenir. Güncel fiyatlar tanıtım sayfasında yer alır; fiyatlara KDV dahil değildir.</li>
+<li>Abonelik, dönem sonundan önce iptal edilmedikçe aynı süreyle yenilenir. İptal, içinde bulunulan dönemin sonunda geçerli olur; kullanılmayan süre için ücret iadesi yapılmaz.</li>
+<li>Fiyat değişiklikleri en az 30 gün önce bildirilir ve bir sonraki dönemden itibaren uygulanır.</li>
+<li>Ödemesi yapılmayan çalışma alanı salt okunur hale getirilebilir.</li>
+</ul>
+<h3>6. Tüketiciler</h3>
+<p>bürOS ticari ve mesleki faaliyet yürüten kişi ve kuruluşlara yöneliktir. Müşterinin 6502 sayılı Tüketicinin Korunması Hakkında Kanun anlamında tüketici olması halinde, Mesafeli Sözleşmeler Yönetmeliği m.15/1-ğ uyarınca elektronik ortamda anında ifa edilen hizmetlerde cayma hakkı bulunmamakla birlikte, ilk ücretli aboneliğin başlangıcından itibaren 14 gün içinde talep edilmesi halinde ödenen ücret iade edilir. Tüketici uyuşmazlıklarında tüketici hakem heyetleri ve tüketici mahkemeleri yetkilidir.</p>
+<h3>7. Müşteri verileri</h3>
+<p>Müşterinin bürOS'a girdiği kayıtlar ve yüklediği dosyalar (“Müşteri Verileri”) Müşteri'ye aittir. bürOS, Müşteri Verilerini yalnızca hizmeti sunmak için ve <a href="#veri-isleme">Veri işleme sözleşmesi</a> çerçevesinde işler; satmaz, reklam amacıyla kullanmaz. Müşteri, Müşteri Verilerinin hukuka uygun olarak toplandığından ve bu veriler içindeki kişisel veriler bakımından aydınlatma ve gerekli hallerde rıza yükümlülüklerini yerine getirdiğinden sorumludur.</p>
+<h3>8. Kabul edilebilir kullanım</h3>
+<p>Hizmet; hukuka aykırı içerik barındırmak veya paylaşmak, başkalarının fikri haklarını ihlal etmek, zararlı yazılım yüklemek, sistemin güvenliğini test etmek veya aşmaya çalışmak (yazılı izin olmaksızın), hizmeti olağan dışı yükle kullanmak, otomatik araçlarla veri toplamak veya hizmeti yeniden satmak için kullanılamaz. Bu kurallara aykırılık halinde ilgili hesap veya çalışma alanı, mümkünse önceden bildirilerek askıya alınabilir.</p>
+<h3>9. Fikri mülkiyet</h3>
+<p>bürOS yazılımı, arayüzü, logosu ve belgeleri {{SIRKET}}'e aittir. Müşteri'ye abonelik süresince hizmeti kendi iş amaçları için kullanma hakkı tanınır; yazılımın kopyalanması, tersine mühendislik yapılması veya türev eser oluşturulması yasaktır. Müşteri'nin ilettiği öneri ve geri bildirimler hizmeti geliştirmek için serbestçe kullanılabilir.</p>
+<h3>10. Hizmet sürekliliği ve destek</h3>
+<p>Hizmetin kesintisiz sunulması için makul çaba gösterilir; planlı bakım çalışmaları mümkün olduğunca mesai saatleri dışında yapılır ve önceden duyurulur. Destek talepleri {{DESTEK_EPOSTA}} adresinden, iş günlerinde yanıtlanır.</p>
+<h3>11. Sorumluluğun sınırı</h3>
+<p>bürOS, hizmetin kullanılmasından veya kullanılamamasından doğan dolaylı zararlardan, kâr kaybından ve veri kaybından (bürOS'un kastı veya ağır ihmali hariç) sorumlu değildir. bürOS'un bu sözleşmeden doğan toplam sorumluluğu, zarara yol açan olaydan önceki 12 ayda Müşteri'nin ödediği abonelik bedeliyle sınırlıdır. Kast, ağır ihmal ve kanunen sınırlanamayan haller saklıdır. bürOS mesleki, hukuki veya mali danışmanlık hizmeti vermez; uygulamadaki hesaplamalar ve hatırlatmalar Müşteri'nin kendi kontrolünün yerini tutmaz.</p>
+<h3>12. Sona erme</h3>
+<p>Müşteri aboneliğini istediği an iptal edebilir. Taraflardan biri esaslı bir yükümlülüğü ihlal eder ve bu ihlali yazılı bildirimden itibaren 15 gün içinde gidermezse diğer taraf sözleşmeyi feshedebilir. Sona ermeden sonra Müşteri Verileri {{SAKLAMA_GUN}} gün boyunca dışa aktarılmak üzere erişilebilir tutulur, ardından silinir.</p>
+<h3>13. Değişiklikler</h3>
+<p>Bu koşullar güncellenebilir. Esaslı değişiklikler yürürlükten en az 30 gün önce e-posta veya uygulama içi bildirimle duyurulur; değişikliği kabul etmeyen Müşteri yürürlük tarihine kadar aboneliğini iptal edebilir ve peşin ödediği kullanılmayan süre bedeli iade edilir.</p>
+<h3>14. Uygulanacak hukuk ve yetki</h3>
+<p>Bu sözleşmeye Türk hukuku uygulanır. Uyuşmazlıklarda {{YETKILI_MAHKEME}} mahkemeleri ve icra daireleri yetkilidir; tüketiciler bakımından kanuni yetki kuralları saklıdır. bürOS'un elektronik kayıtları HMK m.193 uyarınca delil sözleşmesi niteliğindedir.</p>
+</article>
+
+<article id="veri-isleme">
+<h2>Veri işleme sözleşmesi</h2>
+<p class="meta">Müşteri Verileri içindeki kişisel veriler için KVKK m.12 kapsamında · Kullanım koşullarının ekidir</p>
+<h3>1. Roller</h3>
+<p>Müşteri'nin bürOS'a girdiği kişisel veriler (örneğin büronun kendi müşterileri, işverenleri, taşeronları, çalışanları ve şantiye muhataplarının adı, iletişim bilgileri, tapu ve ruhsat belgelerindeki bilgiler) bakımından Müşteri veri sorumlusu, bürOS veri işleyendir.</p>
+<h3>2. bürOS'un yükümlülükleri</h3>
+<ul>
+<li>Kişisel verileri yalnızca Müşteri'nin talimatı doğrultusunda ve hizmeti sunmak amacıyla işler; başka bir amaçla kullanmaz, satmaz, üçüncü kişilerle paylaşmaz.</li>
+<li>Verilere erişen çalışanlarını gizlilik yükümlülüğü altına alır ve erişimi gerekli olanlarla sınırlar.</li>
+<li><a href="#gizlilik">Gizlilik ve güvenlik</a> bölümünde açıklanan teknik ve idari tedbirleri uygular.</li>
+<li>Alt işleyen olarak yalnızca KVKK aydınlatma metninin “Aktarım” bölümünde sayılan barındırma ve e-posta tedarikçilerini kullanır; yeni bir alt işleyen eklemeden önce Müşteri'yi bilgilendirir. Müşteri, makul gerekçeyle itiraz edebilir ve itirazı karşılanmazsa aboneliğini cezasız feshedebilir.</li>
+<li>Bir veri ihlalini öğrendiğinde Müşteri'yi gecikmeksizin ve en geç 48 saat içinde bilgilendirir; Müşteri'nin Kurul'a ve ilgili kişilere bildirim yapabilmesi için gereken bilgiyi sağlar.</li>
+<li>İlgili kişilerden gelen başvuruları Müşteri'ye yönlendirir ve Müşteri'nin bu başvuruları yanıtlamasına makul ölçüde yardımcı olur.</li>
+<li>Sözleşme sona erdiğinde, dışa aktarma süresinin ardından verileri siler; yedeklerdeki kopyalar yedek döngüsü içinde silinir.</li>
+</ul>
+<h3>3. Müşteri'nin yükümlülükleri</h3>
+<p>Müşteri, verileri işlemek için geçerli bir hukuki sebebe sahip olduğunu, ilgili kişileri aydınlattığını, gerekli hallerde açık rıza aldığını ve hizmete özel nitelikli kişisel veri yüklemediğini kabul eder. Çalışma alanına kimin erişeceğini belirlemek ve erişimleri güncel tutmak Müşteri'nin sorumluluğundadır.</p>
+<h3>4. Denetim</h3>
+<p>Müşteri, yılda bir defadan fazla olmamak üzere ve makul süre önceden bildirmek kaydıyla, bürOS'un bu sözleşmeye uyumunu gösteren bilgi ve belgeleri talep edebilir.</p>
+</article>
+
+<article id="basvuru">
+<h2>Başvuru</h2>
+<p class="meta">Veri Sorumlusuna Başvuru Usul ve Esasları Hakkında Tebliğ kapsamında</p>
+<p>KVKK m.11'deki haklarınızı kullanmak için başvurunuzu aşağıdaki yollardan biriyle iletebilirsiniz. Başvuruda adınız, soyadınız, (Türk vatandaşları için) T.C. kimlik numaranız, tebligata esas adresiniz, varsa e-posta adresiniz ve telefonunuz ile talebinizin konusu yer almalıdır.</p>
+<ul>
+<li>Islak imzalı dilekçeyle şahsen veya noter aracılığıyla: {{ADRES}}</li>
+<li>Kayıtlı elektronik posta (KEP) ile: {{KEP}}</li>
+<li>Güvenli elektronik imza veya mobil imza ile ya da bürOS'ta kayıtlı e-posta adresinizden: {{KVKK_EPOSTA}}</li>
+</ul>
+<p>Başvurunuz, niteliğine göre en kısa sürede ve en geç 30 gün içinde ücretsiz olarak sonuçlandırılır; işlemin ayrıca bir maliyet gerektirmesi halinde Kurul'ca belirlenen tarifedeki ücret alınabilir. Kimliğinizi doğrulamak için ek bilgi isteyebiliriz. Başvurunuzun reddedilmesi, cevabın yetersiz bulunması veya süresinde cevap verilmemesi halinde, cevabı öğrendiğiniz tarihten itibaren 30 gün ve her halde başvuru tarihinden itibaren 60 gün içinde Kişisel Verileri Koruma Kurulu'na şikâyette bulunabilirsiniz.</p>
+<p>Bir çalışma alanında yer alan ve sizinle ilgili olan kayıtlar için (örneğin bir mimarlık bürosunun müşterisiyseniz) veri sorumlusu ilgili bürodur; başvurunuzu doğrudan o büroya iletmeniz gerekir. Bize ulaşan bu tür başvuruları ilgili büroya yönlendiririz.</p>
 </article>
 </main>
 </div>
-<footer><span>© 2026 bürOS</span><span><a href="./">Ana sayfa</a> · <a href="app">Uygulama</a></span></footer>
+<footer><span>© {{YIL}} {{SIRKET_KISA}}</span><span><a href="./">Ana sayfa</a> · <a href="app">Uygulama</a></span></footer>
 </body>
 </html>
