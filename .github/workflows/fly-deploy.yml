@@ -1,5 +1,7 @@
-# Deploys to Fly.io on every push to main. Needs the repository secret FLY_API_TOKEN
-# (fly tokens create deploy -a <app>). Without it the job is skipped.
+# Deploys bürOS to Fly.io on every push to main (or by hand from the Actions tab).
+# Needs the repository secret FLY_API_TOKEN (an org token: fly tokens create org). Without it the job is skipped.
+# Each run makes sure the app has a Postgres database and a Tigris bucket, deploys exactly one machine
+# and checks /healthz. Output that could contain credentials is filtered, because this repository is public.
 name: Fly.io deploy
 on:
   push:
@@ -11,6 +13,8 @@ jobs:
     runs-on: ubuntu-latest
     env:
       FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+      ADMIN_EMAIL: huseyinaydinwork@gmail.com
+      REGION: fra
     steps:
       - uses: actions/checkout@v4
       - name: Check token
@@ -25,6 +29,45 @@ jobs:
         run: npm run check
       - uses: superfly/flyctl-actions/setup-flyctl@master
         if: steps.token.outputs.ok
+      - name: Provision database and file storage
+        if: steps.token.outputs.ok
+        run: |
+          set -euo pipefail
+          APP=$(sed -n 's/^app = "\(.*\)"/\1/p' fly.toml)
+          # Run a command but print only lines that cannot carry credentials.
+          quiet(){ if "$@" >/tmp/out 2>&1; then grep -viE 'postgres(ql)?://|password|secret|key|token' /tmp/out | tail -20 || true; else grep -viE 'postgres(ql)?://|password|secret|key|token' /tmp/out | tail -40 || true; return 1; fi; }
+          flyctl apps list --json > /tmp/apps.json
+          ORG=$(jq -r --arg a "$APP" '.[] | select(.Name==$a) | (.Organization.Slug // .Organization.slug // empty)' /tmp/apps.json | head -1)
+          [ -n "$ORG" ] || { echo "Uygulama bulunamadı: $APP"; exit 1; }
+          echo "Uygulama: $APP · organizasyon: $ORG"
+          SECRETS=$(flyctl secrets list -a "$APP" --json | jq -r '.[] | (.Name // .name)')
+          if ! grep -qx DATABASE_URL <<<"$SECRETS"; then
+            if ! jq -e --arg a "$APP-db" '.[] | select(.Name==$a)' /tmp/apps.json >/dev/null; then
+              echo "== PostgreSQL oluşturuluyor: $APP-db"
+              quiet flyctl postgres create --name "$APP-db" --org "$ORG" --region "$REGION" --initial-cluster-size 1 --vm-size shared-cpu-1x --volume-size 10
+            fi
+            echo "== PostgreSQL bağlanıyor"
+            quiet flyctl postgres attach "$APP-db" -a "$APP" --yes
+          else echo "PostgreSQL bağlı."; fi
+          if ! grep -qx BUCKET_NAME <<<"$SECRETS"; then
+            echo "== Dosya deposu (Tigris) oluşturuluyor"
+            quiet flyctl storage create -a "$APP" -o "$ORG" -n "$APP-files" --yes
+          else echo "Dosya deposu bağlı."; fi
+          if ! grep -qx BUROS_PLATFORM_ADMINS <<<"$SECRETS"; then
+            quiet flyctl secrets set -a "$APP" --stage BUROS_PLATFORM_ADMINS="$ADMIN_EMAIL"
+          fi
       - name: Deploy
         if: steps.token.outputs.ok
-        run: flyctl deploy --remote-only --ha=false
+        run: flyctl deploy --remote-only --ha=false --wait-timeout 300
+      - name: Keep exactly one machine
+        if: steps.token.outputs.ok
+        run: flyctl scale count 1 --yes
+      - name: Health check
+        if: steps.token.outputs.ok
+        run: |
+          APP=$(sed -n 's/^app = "\(.*\)"/\1/p' fly.toml)
+          for i in $(seq 1 20); do
+            if curl -fsS "https://$APP.fly.dev/healthz"; then echo; echo "Yayında: https://$APP.fly.dev"; exit 0; fi
+            sleep 6
+          done
+          flyctl status; flyctl logs --no-tail | tail -60 | grep -viE 'postgres(ql)?://|password|secret' ; exit 1
