@@ -57,24 +57,94 @@
     document.querySelectorAll('[data-monthly-note]').forEach(el => { el.textContent = yearly ? el.dataset.yearlyNote : el.dataset.monthlyNote; });
   }));
 
-  // Demo request
+  // ---------- Editable content (admin panel → /api/site) ----------
+  const escHtml = v => String(v).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const richText = v => escHtml(v).replace(/\*([^*\n]+)\*/g, '<em>$1</em>').replace(/\n/g, '<br>');
+  function applyContent(c) {
+    document.querySelectorAll('[data-cms]').forEach(el => { const v = c[el.dataset.cms]; if (typeof v === 'string' && v.trim()) el.innerHTML = richText(v); });
+    const ann = document.querySelector('[data-cms-announce]');
+    if (ann && c.announcement && c.announcement.trim()) { ann.hidden = false; if (c.announcement_link) ann.setAttribute('href', c.announcement_link); }
+    document.querySelectorAll('[data-cms-price]').forEach(el => { const k = el.dataset.cmsPrice; if (c[`price_${k}_monthly`]) el.dataset.monthly = c[`price_${k}_monthly`]; if (c[`price_${k}_yearly`]) el.dataset.yearly = c[`price_${k}_yearly`]; const yearly = document.querySelector('[data-billing="yearly"]')?.getAttribute('aria-pressed') === 'true'; el.textContent = yearly ? el.dataset.yearly : el.dataset.monthly; });
+    const contact = document.querySelector('[data-cms-contact]');
+    if (contact && (c.contact_email || c.contact_phone)) { contact.hidden = false; contact.innerHTML = 'Doğrudan ulaşın: ' + [c.contact_email && `<a href="mailto:${escHtml(c.contact_email)}">${escHtml(c.contact_email)}</a>`, c.contact_phone && `<a href="tel:${escHtml(c.contact_phone.replace(/[^+0-9]/g, ''))}">${escHtml(c.contact_phone)}</a>`].filter(Boolean).join(' · '); }
+  }
+  if (!window.BUROS_PREVIEW) fetch('/api/site').then(r => r.ok ? r.json() : null).then(d => d && applyContent(d.content || {})).catch(() => {});
+
+  // ---------- Anonymous counters (no cookies, nothing personal) ----------
+  const track = (e, extra = {}) => { if (window.BUROS_PREVIEW) return; try { const body = JSON.stringify({ e, ...extra }); if (!navigator.sendBeacon?.('/api/track', new Blob([body], { type: 'application/json' }))) fetch('/api/track', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body, keepalive: true }); } catch {} };
+  try { if (!sessionStorage.getItem('buros-v')) { sessionStorage.setItem('buros-v', '1'); track('visit', { ref: document.referrer || '' }); } } catch { track('visit'); }
+  document.addEventListener('click', e => { if (e.target.closest('[data-app="signup"]')) track('signup_click'); });
+  const pricing = document.getElementById('fiyat');
+  if (pricing && 'IntersectionObserver' in window) { const po = new IntersectionObserver(es => { if (es.some(x => x.isIntersecting)) { track('pricing_view'); po.disconnect(); } }, { threshold: .35 }); po.observe(pricing); }
+
+  // ---------- Demo request: two steps and a confirmation ----------
   const form = document.getElementById('waitlist'), msg = document.getElementById('wl-msg');
-  document.querySelectorAll('[data-interest]').forEach(a => a.addEventListener('click', () => { form.plan.value = a.dataset.interest; }));
+  const steps = [...form.querySelectorAll('[data-step]')], dots = [...form.querySelectorAll('.demo-steps span')];
+  let started = false;
+  const go = n => { steps.forEach(st => { st.hidden = +st.dataset.step !== n; }); dots.forEach((d, i) => { d.classList.toggle('on', i < n); }); form.dataset.at = n; const f = steps[n - 1].querySelector('input:not([type=radio]),textarea,a,button'); if (n > 1) f?.focus({ preventScroll: true }); };
+  const fail = (text, el) => { msg.textContent = text; msg.classList.add('error'); el?.focus(); };
+  form.addEventListener('focusin', () => { if (!started) { started = true; track('demo_start'); } });
+  form.querySelector('[data-next]').addEventListener('click', () => {
+    msg.textContent = ''; msg.classList.remove('error');
+    if (!form.name.value.trim()) return fail('Adınızı yazın.', form.name);
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(form.email.value.trim())) return fail('Geçerli bir iş e-postası yazın.', form.email);
+    go(2);
+  });
+  form.querySelector('[data-back]').addEventListener('click', () => go(1));
+  form.addEventListener('keydown', e => { if (e.key === 'Enter' && form.dataset.at !== '2' && e.target.tagName === 'INPUT') { e.preventDefault(); form.querySelector('[data-next]').click(); } });
+  document.querySelectorAll('[data-interest]').forEach(a => a.addEventListener('click', () => { const r = form.querySelector(`input[name="plan"][value="${a.dataset.interest}"]`); if (r) r.checked = true; }));
   form.addEventListener('submit', async e => {
     e.preventDefault();
-    const email = form.email.value.trim();
-    msg.classList.remove('error');
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) { msg.textContent = 'Geçerli bir e-posta adresi yazın.'; msg.classList.add('error'); form.email.focus(); return; }
-    if (window.BUROS_PREVIEW) { try { const saved = JSON.parse(localStorage.getItem('buros-waitlist') || '[]'); saved.push({ email, plan: form.plan.value, company: form.company.value.trim() }); localStorage.setItem('buros-waitlist', JSON.stringify(saved)); } catch {} msg.textContent = 'Önizleme sürümü: talep yalnızca bu tarayıcıda saklandı, kimseye gönderilmedi.'; form.email.value = ''; return; }
-    const button = form.querySelector('button'); button.disabled = true;
+    if (form.dataset.at !== '2') return form.querySelector('[data-next]').click();
+    msg.textContent = ''; msg.classList.remove('error');
+    const v = Object.fromEntries(new FormData(form));
+    if (v.phone && !/^[+0-9 ()-]{7,30}$/.test(v.phone)) return fail('Telefon numarası geçersiz.', form.phone);
+    const done = () => { form.querySelector('[data-done-name]').textContent = v.name ? ', ' + v.name.trim().split(' ')[0] : ''; go(3); form.classList.add('sent'); };
+    if (window.BUROS_PREVIEW) { try { const saved = JSON.parse(localStorage.getItem('buros-waitlist') || '[]'); saved.push(v); localStorage.setItem('buros-waitlist', JSON.stringify(saved)); } catch {} return done(); }
+    const button = form.querySelector('button[type=submit]'); button.disabled = true; button.classList.add('busy');
     try {
-      const r = await fetch('/api/waitlist', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, plan: form.plan.value, company: form.company.value.trim() }) });
+      const r = await fetch('/api/waitlist', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(v) });
       if (!r.ok) throw new Error((await r.json().catch(() => ({}))).error || 'Kaydedilemedi.');
-      msg.textContent = 'Teşekkürler. Ekibimiz bir iş günü içinde bu adrese dönüş yapacak.';
-      form.email.value = ''; form.company.value = '';
-    } catch (err) { msg.textContent = 'Gönderilemedi. Birazdan tekrar deneyin.'; msg.classList.add('error'); }
-    finally { button.disabled = false; }
+      done();
+    } catch (err) { fail(err.message === 'Kaydedilemedi.' ? 'Gönderilemedi. Birazdan tekrar deneyin.' : err.message); }
+    finally { button.disabled = false; button.classList.remove('busy'); }
   });
+
+  // ---------- Live product preview in the demo section ----------
+  const live = document.querySelector('.live');
+  if (live) {
+    const play = () => {
+      live.classList.add('play');
+      live.querySelectorAll('[data-count]').forEach(el => { const to = +el.dataset.count; if (reduce) { el.textContent = to; return; } const t0 = performance.now(); const tick = t => { const k = Math.min(1, (t - t0) / 1400); el.textContent = Math.round(to * (1 - Math.pow(1 - k, 3))); if (k < 1) requestAnimationFrame(tick); }; requestAnimationFrame(tick); });
+      if (reduce) return;
+      live.querySelectorAll('.live-state').forEach((el, i) => setTimeout(() => { el.classList.add('flip'); setTimeout(() => { el.textContent = el.dataset.to; el.classList.add('done'); el.classList.remove('flip'); }, 220); }, 1600 + i * 900));
+    };
+    if ('IntersectionObserver' in window) { const lo = new IntersectionObserver(es => { if (es.some(x => x.isIntersecting)) { play(); lo.disconnect(); } }, { threshold: .4 }); lo.observe(live); } else play();
+  }
+
+  // ---------- Footer: night skyline that fills the screen at the end of the page ----------
+  (function footScene() {
+    const scene = document.getElementById('footScene'); if (!scene) return;
+    let seed = 7; const rnd = () => { seed = (seed * 16807) % 2147483647; return (seed - 1) / 2147483646; };
+    const W = 1600, H = 600, NS = 'http://www.w3.org/2000/svg';
+    const layer = (cls, count, minH, maxH, lit, crane) => {
+      const svg = scene.querySelector('.fs-layer.' + cls); svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+      let x = -20, out = '', wins = '';
+      while (x < W + 20) {
+        const w = 40 + rnd() * (cls === 'near' ? 110 : 80), h = minH + rnd() * (maxH - minH), top = H - h, slant = rnd() < .55 ? Math.min(w * .35, 34) : 0, left = rnd() < .5;
+        out += `<path d="M${x.toFixed(1)} ${H}V${(top + (left ? slant : 0)).toFixed(1)}L${(x + w).toFixed(1)} ${(top + (left ? 0 : slant)).toFixed(1)}V${H}Z"/>`;
+        if (lit) { for (let fy = top + slant + 14; fy < H - 18; fy += 16) for (let fx = x + 8; fx < x + w - 10; fx += 12) if (rnd() < lit) wins += `<rect x="${fx.toFixed(1)}" y="${fy.toFixed(1)}" width="5" height="7"${rnd() < .12 ? ` class="tw" style="animation-delay:${(rnd() * 6).toFixed(2)}s"` : ''}/>`; }
+        x += w + (cls === 'far' ? 2 : 6 + rnd() * 14);
+      }
+      let extra = '';
+      if (crane) { const cx = W * crane, base = H, top = H - maxH - 120; extra = `<g class="crane"><path d="M${cx} ${base}V${top}M${cx - 8} ${base}V${top + 12}M${cx - 140} ${top + 8}H${cx + 260}M${cx} ${top - 24}L${cx - 140} ${top + 8}M${cx} ${top - 24}L${cx + 260} ${top + 8}M${cx + 170} ${top + 8}V${top + 150}"/><rect x="${cx + 160}" y="${top + 150}" width="20" height="12"/><rect x="${cx - 150}" y="${top + 8}" width="36" height="22"/></g><circle class="beacon" cx="${cx}" cy="${top - 28}" r="4"/>`; }
+      svg.innerHTML = `<g class="blocks">${out}</g>${extra}<g class="wins">${wins}</g>`;
+    };
+    layer('far', 0, 120, 300, 0, 0); layer('mid', 0, 90, 250, .07, .72); layer('near', 0, 50, 170, .16, 0);
+    const stars = scene.querySelector('.fs-stars'); let st = '';
+    for (let i = 0; i < 90; i++) st += `<i style="left:${(rnd() * 100).toFixed(2)}%;top:${(rnd() * 55).toFixed(2)}%;animation-delay:${(rnd() * 5).toFixed(2)}s;opacity:${(.25 + rnd() * .6).toFixed(2)}"></i>`;
+    stars.innerHTML = st;
+  })();
 
   // ---------- Three.js scene ----------
   const canvas = document.getElementById('scene');

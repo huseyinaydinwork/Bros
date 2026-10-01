@@ -8,6 +8,7 @@ const {createAutomations}=require('./automations.cjs');
 const {levelFor,visibleState,mergeScoped}=require('./access.cjs');
 const {createStorage}=require('./storage.cjs');
 const {migrateLegacy}=require('./auth.cjs');
+const site=require('./site.cjs');
 const ROOT = process.env.BUROS_DATA_DIR || path.join(__dirname, '.buros');
 const PROD=process.env.NODE_ENV==='production';
 // On Fly.io the app name is known, so APP.fly.dev works without extra configuration.
@@ -31,7 +32,17 @@ async function init(){
  storage.save('leads');
 }
 const leads=()=>storage.collection('leads');
-function addLead(entry){const list=leads();if(list.length>=5000){const e=Error('Liste şu an dolu.');e.status=429;throw e;}if(!list.some(x=>x.email===entry.email&&x.plan===entry.plan&&x.type===entry.type)){list.unshift({id:crypto.randomUUID(),...entry,at:new Date().toISOString()});storage.save('leads');}}
+function addLead(entry){const list=leads();const same=list.find(x=>x.email===entry.email&&x.type===entry.type&&x.status!=='won'&&x.status!=='lost');
+ if(same){Object.assign(same,Object.fromEntries(Object.entries(entry).filter(([,v])=>v)),{at:new Date().toISOString(),repeat:(same.repeat||0)+1});list.splice(list.indexOf(same),1);list.unshift(same);storage.save('leads');return same;}
+ if(list.length>=5000){const e=Error('Liste şu an dolu.');e.status=429;throw e;}
+ const lead={id:crypto.randomUUID(),status:'new',...entry,at:new Date().toISOString()};list.unshift(lead);storage.save('leads');return lead;}
+// Landing page analytics: daily counters only (no cookies, no IP addresses, no personal data).
+const TRACK_EVENTS=['visit','signup_click','demo_start','demo_submit','pricing_view'];
+let analytics=null,analyticsDirty=false;const trackLimits=new Map();
+function track(event,ref){if(!TRACK_EVENTS.includes(event))return;analytics??=storage.doc('analytics')||{days:{},refs:{}};const day=new Date().toISOString().slice(0,10);const d=analytics.days[day]??={};d[event]=(d[event]||0)+1;
+ if(event==='visit'&&ref){analytics.refs[day]??={};const r=analytics.refs[day];if(Object.keys(r).length<200||r[ref])r[ref]=(r[ref]||0)+1;}
+ analyticsDirty=true;}
+function flushAnalytics(){if(!analyticsDirty||!analytics)return;analyticsDirty=false;const keep=new Date(Date.now()-400*864e5).toISOString().slice(0,10);for(const k of Object.keys(analytics.days))if(k<keep)delete analytics.days[k];for(const k of Object.keys(analytics.refs))if(k<keep)delete analytics.refs[k];storage.setDoc('analytics',analytics);}
 const FINANCE_FLOW={id:'finans',name:'Finans',scope:'finance',states:[{id:'planned',name:'Planlandı',progress:0,type:'pending',color:'gray'},{id:'invoiced',name:'Faturalandı',progress:50,type:'active',color:'blue'},{id:'paid',name:'Ödendi',progress:100,type:'completed',color:'green'}]};
 // Workspaces are loaded lazily and cached; every change is written through the storage layer.
 const states=new Map();
@@ -75,7 +86,9 @@ const handler=async(req,res)=>{try{
  if(req.headers.origin){let o=null;try{o=new URL(req.headers.origin);}catch{}if(!o||o.host!==host)return json(res,403,{error:'Geçersiz kaynak.'});}
  const url=new URL(req.url,`http://${host}`),route=url.pathname,method=req.method;if(!PUBLIC_URL)seenOrigin=`${proto}://${host}`;
  if(route==='/api/session'&&method==='GET')return json(res,200,auth.info(req));
- if(route==='/api/waitlist'&&method==='POST'){const v=await readJson(req,2048);const email=String(v.email||'').trim().toLowerCase().slice(0,200);if(!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email))return json(res,400,{error:'Geçerli bir e-posta adresi yazın.'});addLead({type:'demo',email,plan:['ekip','buro','kurumsal'].includes(v.plan)?v.plan:'buro',company:String(v.company||'').trim().slice(0,120)});return json(res,201,{ok:true});}
+ if(route==='/api/site'&&method==='GET'){res.setHeader('Cache-Control','public, max-age=60');return json(res,200,{content:storage.doc('site')?.content||{}});}
+ if(route==='/api/track'&&method==='POST'){const key=req.ip||'x',n=(trackLimits.get(key)||0)+1;trackLimits.set(key,n);if(trackLimits.size>5000)trackLimits.clear();if(n<=200){const v=await readJson(req,1024).catch(()=>({}));let ref='';try{ref=v.ref?new URL(String(v.ref)).hostname.replace(/^www\./,'').slice(0,80):'';}catch{}if(ref&&PUBLIC_URL&&ref===new URL(PUBLIC_URL).hostname)ref='';track(String(v.e||''),ref);}res.writeHead(204);return res.end();}
+ if(route==='/api/waitlist'&&method==='POST'){const v=await readJson(req,4096);const email=String(v.email||'').trim().toLowerCase().slice(0,200);if(!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email))return json(res,400,{error:'Geçerli bir e-posta adresi yazın.'});const t=(x,n)=>String(x||'').trim().slice(0,n);const phone=t(v.phone,30);if(phone&&!/^[+0-9 ()-]{7,30}$/.test(phone))return json(res,400,{error:'Telefon numarası geçersiz.'});addLead({type:'demo',email,name:t(v.name,100),phone,company:t(v.company,120),plan:['ekip','buro','kurumsal'].includes(v.plan)?v.plan:'buro',teamSize:['1–5','6–15','16–50','50+'].includes(v.teamSize)?v.teamSize:'',message:t(v.message,1000),source:'landing'});track('demo_submit');return json(res,201,{ok:true});}
  if(route==='/abonelik'&&method==='GET'){const ok=auth.unsubscribe(url.searchParams.get('t')||'');res.writeHead(ok?200:404,{'Content-Type':'text/html; charset=utf-8'});return res.end(`<!doctype html><meta charset=utf-8><meta name=viewport content='width=device-width,initial-scale=1'><title>bürOS</title><body style="font:16px/1.6 system-ui,sans-serif;background:#f3f4f0;color:#121a15;display:grid;place-items:center;min-height:100vh;margin:0"><div style="max-width:440px;padding:32px;background:#fff;border:1px solid #e3e6de;border-radius:14px"><h1 style="font-size:20px;margin:0 0 8px">${ok?'Abonelikten çıktınız':'Bağlantı geçersiz'}</h1><p style="margin:0;color:#4d5850">${ok?'Artık bilgilendirme ve kampanya e-postası göndermeyeceğiz. Hesabınızla ilgili zorunlu bildirimler gelmeye devam eder.':'Bu bağlantı artık geçerli değil.'}</p></div>`);}
  if(route.startsWith('/api/invites/')&&route!=='/api/invites/accept'&&method==='GET')return json(res,200,auth.invitation(route.split('/').pop()));
  if(route==='/api/signup'&&method==='POST')return json(res,201,auth.signup(await readJson(req),req,res));
@@ -164,6 +177,23 @@ async function adminRoutes(route,method,url,req,res,me){
  const spaceMatch=route.match(/^\/api\/admin\/spaces\/([\w-]+)$/);
  if(spaceMatch&&method==='POST'){auth.setPlan(spaceMatch[1],await readJson(req));return json(res,200,await spaceRow(spaces.find(s=>s.id===spaceMatch[1])));}
  if(route==='/api/admin/leads'&&method==='GET')return json(res,200,leads());
+ const leadMatch=route.match(/^\/api\/admin\/leads\/([\w-]+)$/);
+ if(leadMatch&&method==='POST'){const l=leads().find(x=>x.id===leadMatch[1]);if(!l)return json(res,404,{error:'Talep bulunamadı.'});const v=await readJson(req);
+  if(v.delete===true){leads().splice(leads().indexOf(l),1);storage.save('leads');return json(res,200,{ok:true});}
+  if(['new','contacted','demo','won','lost'].includes(v.status)&&v.status!==l.status){l.status=v.status;(l.history??=[]).push({at:new Date().toISOString(),status:v.status,by:me.name});}
+  if(typeof v.note==='string'&&v.note.trim()){(l.notes??=[]).push({at:new Date().toISOString(),by:me.name,text:v.note.trim().slice(0,2000)});}
+  if(typeof v.nextAt==='string')l.nextAt=/^\d{4}-\d{2}-\d{2}$/.test(v.nextAt)?v.nextAt:'';
+  if(typeof v.value==='number'&&v.value>=0&&v.value<1e9)l.value=Math.round(v.value);
+  l.updatedAt=new Date().toISOString();storage.save('leads');return json(res,200,l);}
+ if(route==='/api/admin/leads.csv'&&method==='GET'){const q=v=>`"${String(v??'').replace(/"/g,'""')}"`;const rows=[['Tarih','Tür','Durum','Ad','E-posta','Telefon','Firma','Ekip','Plan','Not'],...leads().map(l=>[l.at,l.type,l.status||'new',l.name,l.email,l.phone,l.company,l.teamSize,l.plan,l.message])];res.writeHead(200,{'Content-Type':'text/csv; charset=utf-8','Content-Disposition':'attachment; filename="buros-talepler.csv"'});return res.end('\ufeff'+rows.map(r=>r.map(q).join(';')).join('\n'));}
+ if(route==='/api/admin/sales'&&method==='GET'){flushAnalytics();const n=Math.min(180,Math.max(7,Number(url.searchParams.get('days'))||30)),a=analytics||storage.doc('analytics')||{days:{},refs:{}},L=leads();
+  const days=Array.from({length:n},(_,i)=>{const date=new Date(Date.now()-(n-1-i)*DAY).toISOString().slice(0,10),c=a.days[date]||{};return {date,visits:c.visit||0,signupClicks:c.signup_click||0,demoStarts:c.demo_start||0,demoSubmits:c.demo_submit||0,leads:L.filter(l=>(l.at||'').startsWith(date)).length,signups:accounts.filter(x=>(x.createdAt||'').startsWith(date)).length,spaces:spaces.filter(s=>(s.createdAt||'').startsWith(date)).length};});
+  const sum=k=>days.reduce((t,d)=>t+d[k],0),since=days[0].date,refs={};for(const [d,r] of Object.entries(a.refs||{}))if(d>=since)for(const [h,c] of Object.entries(r))refs[h]=(refs[h]||0)+c;
+  const rows=spaces.map(s=>auth.billing(s)),status=Object.fromEntries(['new','contacted','demo','won','lost'].map(k=>[k,L.filter(l=>(l.status||'new')===k).length]));
+  const today=new Date().toISOString().slice(0,10);
+  return json(res,200,{days,totals:{visits:sum('visits'),signupClicks:sum('signupClicks'),demoStarts:sum('demoStarts'),leads:sum('leads'),signups:sum('signups'),spaces:sum('spaces')},status,pipelineValue:L.filter(l=>!['won','lost'].includes(l.status||'new')).reduce((t,l)=>t+(l.value||0),0),wonValue:L.filter(l=>l.status==='won').reduce((t,l)=>t+(l.value||0),0),followUps:L.filter(l=>l.nextAt&&l.nextAt<=today&&!['won','lost'].includes(l.status||'new')).length,paid:rows.filter(b=>b.plan!=='trial').length,trials:rows.filter(b=>b.plan==='trial'&&!b.expired).length,expired:rows.filter(b=>b.expired).length,refs:Object.entries(refs).sort((x,y)=>y[1]-x[1]).slice(0,8)});}
+ if(route==='/api/admin/site'&&method==='GET')return json(res,200,{fields:site.FIELDS,content:storage.doc('site')?.content||{},updatedAt:storage.doc('site')?.updatedAt||null});
+ if(route==='/api/admin/site'&&method==='POST'){const v=await readJson(req,32768);const content=site.clean(v.content);storage.setDoc('site',{content,updatedAt:new Date().toISOString(),updatedBy:me.name});return json(res,200,{content});}
  if(route==='/api/admin/outbox'&&method==='GET')return json(res,200,mailer.list().slice(0,300));
  if(route==='/api/admin/automations'&&method==='GET')return json(res,200,{rules:automations.rules(),stats:automations.stats(),segments:Object.entries(automations.segments).map(([id,name])=>({id,name,count:automations.audience(id).length})),campaigns:automations.campaigns()});
  const ruleMatch=route.match(/^\/api\/admin\/automations\/([\w-]+)$/);
@@ -203,8 +233,8 @@ async function start(port=Number(process.env.PORT)||3000){dropPrivileges();
  console.log(`BürOS hazır: http://${HOST==='0.0.0.0'?'localhost':HOST}:${port} · depolama: ${storage.kind} · dosyalar: ${storage.filesKind} · e-posta: ${mailer.provider()}`);
  // Some systems resolve "localhost" to ::1 first; an IPv6 loopback listener avoids a refused connection there.
  if(HOST==='127.0.0.1'){const v6=http.createServer(handler);v6.on('error',()=>{});v6.listen(port,'::1');}
- const run=()=>automations.tick().catch(e=>console.error('otomasyon',e.message));setTimeout(run,5000).unref();setInterval(run,3600000).unref();
- let closing=false;const shutdown=async sig=>{if(closing)return;closing=true;console.log(`${sig} alındı, kapatılıyor…`);server.close();setTimeout(()=>process.exit(1),10000).unref();try{await storage.close();}catch(e){console.error(e.message);}process.exit(0);};
+ const run=()=>automations.tick().catch(e=>console.error('otomasyon',e.message));setTimeout(run,5000).unref();setInterval(run,3600000).unref();setInterval(flushAnalytics,20000).unref();
+ let closing=false;const shutdown=async sig=>{if(closing)return;closing=true;console.log(`${sig} alındı, kapatılıyor…`);server.close();setTimeout(()=>process.exit(1),10000).unref();try{flushAnalytics();await storage.close();}catch(e){console.error(e.message);}process.exit(0);};
  process.on('SIGTERM',()=>shutdown('SIGTERM'));process.on('SIGINT',()=>shutdown('SIGINT'));
  return server;
 }
