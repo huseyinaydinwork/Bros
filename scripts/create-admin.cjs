@@ -3,6 +3,7 @@
 //   docker compose exec app node scripts/create-admin.cjs eposta@ornek.com
 // The password is generated randomly and shown only once; change it after the first login.
 // For an existing account the password is reset only when --reset-password is given.
+// The server reads accounts at start-up, so restart it afterwards.
 const crypto=require('node:crypto'),path=require('node:path');
 const {createStorage}=require('../storage.cjs');
 const args=process.argv.slice(2),reset=args.includes('--reset-password'),[email,name]=args.filter(a=>a!=='--reset-password');
@@ -22,6 +23,6 @@ if(!email||!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){console.error('Kullanım: 
  console.log(created?`Platform yöneticisi oluşturuldu: ${mail}`:`${mail} platform yöneticisi yapıldı.`);
  if(created||reset)console.log(`Geçici parola: ${password}\nİlk girişten sonra Ayarlar → Profil bölümünden değiştirin.`);
  else console.log('Parola değişmedi (sıfırlamak için --reset-password ekleyin).');
- console.log('Giriş yaptıktan sonra /admin adresinden yönetim paneline ulaşabilirsiniz.');
+ console.log('Uygulama çalışıyorsa yeniden başlatın (docker compose restart app / fly apps restart), sonra giriş yapıp /admin adresine gidin.');
  await storage.close();
 })().catch(e=>{console.error(e.message);process.exit(1);});

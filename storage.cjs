@@ -93,7 +93,13 @@ function s3Files(cfg){
  };
 }
 
-async function createStorage({root,databaseUrl=process.env.DATABASE_URL,s3=process.env.S3_BUCKET?{bucket:process.env.S3_BUCKET,endpoint:process.env.S3_ENDPOINT||`https://s3.${process.env.S3_REGION||'eu-central-1'}.amazonaws.com`,region:process.env.S3_REGION||'auto',accessKeyId:process.env.S3_ACCESS_KEY_ID,secretAccessKey:process.env.S3_SECRET_ACCESS_KEY,prefix:process.env.S3_PREFIX||''}:null}={}){
+// S3_* variables, or the AWS_* / BUCKET_NAME names that `fly storage create` (Tigris) sets.
+function s3FromEnv(e=process.env){
+ const bucket=e.S3_BUCKET||e.BUCKET_NAME;if(!bucket)return null;
+ const region=e.S3_REGION||e.AWS_REGION||'auto';
+ return {bucket,endpoint:e.S3_ENDPOINT||e.AWS_ENDPOINT_URL_S3||`https://s3.${region==='auto'?'eu-central-1':region}.amazonaws.com`,region,accessKeyId:e.S3_ACCESS_KEY_ID||e.AWS_ACCESS_KEY_ID,secretAccessKey:e.S3_SECRET_ACCESS_KEY||e.AWS_SECRET_ACCESS_KEY,prefix:e.S3_PREFIX||''};
+}
+async function createStorage({root,databaseUrl=process.env.DATABASE_URL,s3=s3FromEnv()}={}){
  fs.mkdirSync(root,{recursive:true});
  const backend=databaseUrl?await pgBackend(databaseUrl):fileBackend(root);
  const files=s3?s3Files(s3):diskFiles(root);

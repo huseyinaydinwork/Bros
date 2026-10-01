@@ -1,5 +1,26 @@
 # bürOS yayına alma
 
+İki yol var: **Fly.io** (sunucu yönetmeden, en hızlı) ya da **kendi sunucunuz** (Docker Compose). Fly.io için aşağıdaki ilk bölüm yeterlidir.
+
+## Fly.io
+
+Yığın: tek uygulama makinesi (`fly.toml`), Fly Postgres (`DATABASE_URL`) ve dosyalar için Tigris nesne deposu (`BUCKET_NAME`, `AWS_*`). Uygulama verilerini bellekte tutup veritabanına yazdığı için **her zaman tek makine** çalışmalıdır (`--ha=false`, ölçeklemeyin).
+
+1. flyctl kurun ve giriş yapın: `curl -L https://fly.io/install.sh | sh` ardından `fly auth login` (kredi kartı tanımlı hesap gerekir).
+2. Depo klasöründe:
+   ```sh
+   APP=buros-firmaniz ADMIN_EMAIL=huseyinaydinwork@gmail.com ./scripts/fly-setup.sh
+   ```
+   Betik uygulamayı, PostgreSQL'i ve dosya deposunu oluşturur, ayarları yazar, yayınlar, yönetici hesabını açıp geçici parolayı yazdırır. Adres: `https://APP.fly.dev`. Uygulama adı Fly genelinde benzersiz olmalıdır.
+3. E-posta: `fly secrets set -a APP SMTP_HOST=… SMTP_PORT=587 SMTP_USER=… SMTP_PASS=… MAIL_FROM="bürOS <bildirim@alanadiniz.com>"` (veya `RESEND_API_KEY=…`).
+4. Yasal metin bilgileri: `fly secrets set -a APP BUROS_COMPANY="…" BUROS_COMPANY_ADDRESS="…" BUROS_MERSIS=… BUROS_KEP=… BUROS_KVKK_EMAIL=… BUROS_SUPPORT_EMAIL=… BUROS_HOSTING="Fly.io (Almanya, Frankfurt)" BUROS_MAIL_SERVICE="…" BUROS_COURT="…"`.
+5. Kendi alan adınız: `fly certs add alanadiniz.com -a APP`, DNS'e gösterilen kayıtları ekleyin, sonra `DOMAIN=alanadiniz.com` ile betiği tekrar çalıştırın.
+6. Otomatik yayın: `fly tokens create deploy -a APP` çıktısını GitHub deposunda **Settings → Secrets → Actions** altına `FLY_API_TOKEN` adıyla ekleyin. `main` dalına her push'ta `.github/workflows/fly-deploy.yml` yayınlar.
+
+Notlar: Fly.io sunucuları yurt dışındadır (varsayılan Frankfurt); KVKK m.9 kapsamında yurt dışı aktarım için standart sözleşme ve Kurum'a bildirim gerekir, aydınlatma metninde `BUROS_HOSTING` buna göre doldurulmalıdır. Fly Postgres yedeklerini kendiniz de alın: `fly postgres connect` / `pg_dump`.
+
+## Kendi sunucunuz (Docker Compose)
+
 Bu belge bürOS'u tek bir Linux sunucusunda (VPS) Docker ile yayına almayı anlatır. Yığın üç servisten oluşur:
 
 - **app**: Node.js uygulaması (`Dockerfile`)
@@ -47,6 +68,7 @@ docker compose logs -f app
 ```sh
 # Hesabı doğrudan oluşturur, rastgele geçici parolayı bir kez yazdırır
 docker compose exec app node scripts/create-admin.cjs huseyinaydinwork@gmail.com "Hüseyin Aydın"
+docker compose restart app
 ```
 
 ya da `.env` içindeki `BUROS_PLATFORM_ADMINS` listesine e-postanızı yazıp sitede normal şekilde üye olun. Her iki yolla da hesap `/admin` paneline girebilir. Geçici parolayı ilk girişten sonra Ayarlar → Profil bölümünden değiştirin; parolayı unutursanız komutu `--reset-password` ile tekrar çalıştırın.
