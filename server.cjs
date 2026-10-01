@@ -92,6 +92,7 @@ const handler=async(req,res)=>{try{
  if(route==='/api/account'&&method==='POST')return json(res,200,auth.updateAccount(await readJson(req),req));
  if(route==='/api/invites/accept'&&method==='POST')return json(res,200,auth.acceptInvitation(await readJson(req),req));
  if(route==='/api/spaces'&&method==='POST')return json(res,201,auth.createSpace(await readJson(req),req));
+ if(route==='/api/spaces/requests/cancel'&&method==='POST')return json(res,200,auth.cancelRequest(await readJson(req),req));
  if(route==='/api/spaces/join'&&method==='POST')return json(res,200,auth.joinSpace(await readJson(req),req));
  if(route==='/api/spaces/select'&&method==='POST')return json(res,200,auth.selectSpace(await readJson(req),req));
  if(route==='/api/spaces/leave'&&method==='POST')return json(res,200,auth.leaveSpace(req));
@@ -99,11 +100,12 @@ const handler=async(req,res)=>{try{
  if(!space)return json(res,409,{error:'Önce bir çalışma alanı oluşturun veya birine katılın.',code:'no-space'});
  let state=await load(space.id);const bill=auth.billing(space);
  const readOnly=()=>json(res,402,{error:'Deneme süreniz sona erdi. Çalışma alanı salt okunur; devam etmek için bir plan seçin.',code:'trial-expired'});
- if(bill.expired&&method!=='GET'&&!['/api/billing/upgrade','/api/spaces/invite'].includes(route))return readOnly();
+ if(bill.expired&&method!=='GET'&&!['/api/billing/upgrade','/api/spaces/invite','/api/spaces/requests'].includes(route))return readOnly();
  if(route==='/api/billing/upgrade'&&method==='POST'){const v=await readJson(req);addLead({type:'upgrade',email:ctx.account.email,name:ctx.account.name,plan:['ekip','buro','kurumsal'].includes(v.plan)?v.plan:'buro',company:space.name,spaceId:space.id});return json(res,200,{ok:true});}
  if(route==='/api/spaces/invitations'&&method==='POST'){if(actor.role!=='admin')return json(res,403,{error:'Davetleri yalnızca yönetici gönderebilir.'});return json(res,200,auth.inviteByEmail(await readJson(req,32768),actor,space));}
  if(route==='/api/spaces/invitations/revoke'&&method==='POST'){if(actor.role!=='admin')return json(res,403,{error:'Davetleri yalnızca yönetici yönetebilir.'});return json(res,200,auth.revokeInvitation((await readJson(req)).id,space));}
  if(route==='/api/spaces/profile'&&method==='POST'){if(actor.role!=='admin')return json(res,403,{error:'Şirket bilgilerini yalnızca yönetici düzenleyebilir.'});const out=auth.updateSpaceProfile(await readJson(req),space);if(state&&state.settings.name!==space.name){state.settings.name=space.name;state.revision++;await store(space.id,state);}return json(res,200,{...out,revision:state?.revision});}
+ if(route==='/api/spaces/requests'&&method==='POST'){if(actor.role!=='admin')return json(res,403,{error:'Katılım isteklerini yalnızca yönetici yanıtlayabilir.'});return json(res,200,auth.resolveRequest(await readJson(req),actor,space));}
  if(route==='/api/spaces/invite'&&method==='POST'){if(actor.role!=='admin')return json(res,403,{error:'Davet kodunu yalnızca yönetici yönetebilir.'});return json(res,200,auth.invite(await readJson(req),space));}
  if(route==='/api/users'){
   if(actor.role!=='admin')return json(res,403,{error:'Yalnızca yönetici ekip ve erişim izinlerini düzenleyebilir.'});

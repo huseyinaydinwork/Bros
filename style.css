@@ -1070,3 +1070,27 @@ a.nav-item{text-decoration:none}
 .notif-foot:hover{color:var(--text);background:var(--surface-2)}
 @media(max-width:560px){.notif-menu{left:12px;right:12px;width:auto}}
 #modal,#drawer,.popover{scrollbar-width:thin;scrollbar-color:var(--border-strong) transparent}
+/* Join requests and space code */
+.ws-code{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:6px 4px 0;padding:10px 12px;border:1px dashed var(--border-strong);border-radius:10px;background:var(--surface-2)}
+.ws-code span{display:flex;flex-direction:column;gap:2px}
+.ws-code small{font-size:11px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--text-3)}
+.ws-code code{font:700 15px/1 ui-monospace,SFMono-Regular,Menlo,monospace;letter-spacing:.08em;color:var(--text)}
+.ws-code-note{margin:6px 6px 2px;font-size:11.5px;line-height:1.45;color:var(--text-3)}
+.nav-count.alert{background:var(--late);color:#fff}
+.wizard-pending{margin-top:22px;padding:16px 18px;border:1px solid var(--border);border-radius:14px;background:var(--surface)}
+.wizard-pending h2{margin:0 0 10px;font-size:13px;font-weight:700;color:var(--text-2)}
+.pending-row{display:flex;align-items:center;gap:12px;padding:10px 0;border-top:1px solid var(--border)}
+.pending-row:first-of-type{border-top:0}
+.pending-row>span:nth-child(2){flex:1;display:flex;flex-direction:column;min-width:0}
+.pending-row small{color:var(--text-3);font-size:12px}
+.pending-dot{width:10px;height:10px;border-radius:50%;background:#d9a441;box-shadow:0 0 0 0 rgba(217,164,65,.5);animation:pending-pulse 1.8s ease-out infinite;flex:none}
+@keyframes pending-pulse{70%{box-shadow:0 0 0 8px rgba(217,164,65,0)}100%{box-shadow:0 0 0 0 rgba(217,164,65,0)}}
+.pending-refresh{margin-top:8px;display:inline-flex;align-items:center;gap:6px}
+.requests-card{margin-bottom:22px;border-color:var(--sage-600)}
+.requests-card .card-head{display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.request-row{display:grid;grid-template-columns:auto 1fr auto auto auto;align-items:center;gap:12px;padding:12px 0;border-top:1px solid var(--border)}
+.request-who{display:flex;flex-direction:column;min-width:0}
+.request-who small{color:var(--text-3);font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.request-row select{min-width:150px}
+@media(max-width:700px){.request-row{grid-template-columns:auto 1fr;}.request-row select,.request-row button{grid-column:span 1}.request-row select{grid-column:1/-1}}
+@media(prefers-reduced-motion:reduce){.pending-dot{animation:none}}
