@@ -51,6 +51,8 @@ async function load(id){if(!states.has(id))states.set(id,normalize(await storage
 function store(id,s){states.set(id,s);return storage.saveWorkspace(id,s);}
 const publicFiles = {'/':'landing.html','/landing.html':'landing.html','/landing.css':'landing.css','/landing.js':'landing.js','/vendor/three.min.js':'vendor/three.min.js','/app':'index.html','/index.html':'index.html','/app.js':'app.js','/model.mjs':'model.mjs','/calendar.mjs':'calendar.mjs','/style.css':'style.css','/favicon.svg':'favicon.svg','/brand/logo.svg':'brand/logo.svg','/brand/logo-ink.svg':'brand/logo-ink.svg','/brand/mark.svg':'brand/mark.svg','/admin':'admin.html','/admin.js':'admin.js','/hukuki':'legal.html','/hukuki.html':'legal.html'};
 const IMAGE_TYPES=['image/png','image/jpeg','image/webp'];
+// Types that may be shown inline for quick preview. Never SVG or HTML (script execution).
+const PREVIEW_TYPES={png:'image/png',jpg:'image/jpeg',jpeg:'image/jpeg',webp:'image/webp',gif:'image/gif',pdf:'application/pdf',txt:'text/plain; charset=utf-8',csv:'text/plain; charset=utf-8',md:'text/plain; charset=utf-8'};
 // Responses wait until pending writes reach storage, so a success reply means the change is durable.
 async function json(res, code, body) { if(storage){await storage.flush();if(storage.failures()>(res.failBase??0)&&code<400){code=500;body={error:'Değişiklik kaydedilemedi. Lütfen tekrar deneyin.'};}} if(res.headersSent)return; res.writeHead(code, {'Content-Type':'application/json; charset=utf-8','Cache-Control':'no-store'}); res.end(JSON.stringify(body)); }
 const CSP="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self'; frame-src 'self' about:; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'";
@@ -133,12 +135,12 @@ const handler=async(req,res)=>{try{
  if(!state&&actor.role!=='admin')return json(res,403,{error:'Çalışma alanını yalnızca yönetici oluşturabilir.'});
  if(state)incoming=mergeScoped(state,incoming,actor);
  if(!valid(incoming))return json(res,400,{error:"Birleştirilmiş çalışma alanı geçersiz veya kayıt kimlikleri çakışıyor."});
- if(incoming.clients.some(c=>!incoming.projects.some(p=>p.clientId===c.id)))return json(res,400,{error:'Her müşteri en az bir şantiyeye bağlı olmalı. Müşteriyi yeni şantiye ile birlikte oluşturun.'});
+ if(incoming.clients.some(c=>!incoming.projects.some(p=>p.clientId===c.id)))return json(res,400,{error:'Her müşteri en az bir projeye bağlı olmalı. Müşteriyi yeni proje ile birlikte oluşturun.'});
  const owned=async(id,check)=>{if(!/^[a-f0-9-]{36}$/.test(id))return false;const m=await storage.files.meta(space.id,id);return !!m&&check(m);};
  for(const p of incoming.projects){
   const old=state?.projects.find(x=>x.id===p.id);
-  if(p.banner&&p.banner!==old?.banner&&!await owned(p.banner,m=>m.kind==='banner'&&m.projectId===p.id))return json(res,403,{error:'Görsel bu şantiyeye ait değil.'});
-  for(const f of p.files||[])if(!old?.files?.some(x=>x.id===f.id)&&!await owned(f.id,m=>m.projectId===p.id&&!m.objectId&&m.kind!=='banner'))return json(res,403,{error:'Dosya bu şantiyeye ait değil.'});
+  if(p.banner&&p.banner!==old?.banner&&!await owned(p.banner,m=>m.kind==='banner'&&m.projectId===p.id))return json(res,403,{error:'Görsel bu projeye ait değil.'});
+  for(const f of p.files||[])if(!old?.files?.some(x=>x.id===f.id)&&!await owned(f.id,m=>m.projectId===p.id&&!m.objectId&&m.kind!=='banner'))return json(res,403,{error:'Dosya bu projeye ait değil.'});
   for(const section of p.sections)for(const o of section.items)for(const f of o.files){
    const previous=state?.projects.flatMap(x=>x.sections.flatMap(g=>g.items)).find(x=>x.id===o.id)?.files.some(x=>x.id===f.id);
    if(!previous&&!await owned(f.id,m=>m.objectId===o.id))return json(res,403,{error:'Dosya bu kayda ait değil.'});
@@ -155,7 +157,7 @@ const handler=async(req,res)=>{try{
  const name=String(url.searchParams.get('name')||'dosya').slice(0,200);const bytes=await body(req,(kind==='banner'?8:25)*1024*1024);if(!bytes.length)return json(res,400,{error:'Boş dosya yüklenemez.'});
  const id=crypto.randomUUID();const meta={id,name,size:bytes.length,createdAt:new Date().toISOString(),objectId:objectId||null,projectId:site.id,kind,type:IMAGE_TYPES.includes(type)?type:'',uploadedBy:actor.id};await storage.files.put(space.id,id,bytes,meta);return json(res,201,meta);}
  if(route.startsWith('/api/files/')&&method==='GET'){
- const id=route.split('/').pop();if(!/^[a-f0-9-]{36}$/.test(id))return json(res,404,{error:'Dosya bulunamadı.'});if(!levelFor(actor,siteOfFile(state,id)))return json(res,404,{error:'Dosya bulunamadı.'});const meta=await storage.files.meta(space.id,id),stream=meta&&await storage.files.open(space.id,id);if(!stream)return json(res,404,{error:'Dosya bulunamadı.'});const inline=meta.type&&url.searchParams.has('inline');res.writeHead(200,{'Content-Type':inline?meta.type:'application/octet-stream','Content-Disposition':`${inline?'inline':'attachment'}; filename*=UTF-8''${encodeURIComponent(meta.name)}`,'Content-Length':meta.size,'Cache-Control':'private, max-age=3600'});stream.on('error',()=>res.destroy());return stream.pipe(res);}
+ const id=route.split('/').pop();if(!/^[a-f0-9-]{36}$/.test(id))return json(res,404,{error:'Dosya bulunamadı.'});if(!levelFor(actor,siteOfFile(state,id)))return json(res,404,{error:'Dosya bulunamadı.'});const meta=await storage.files.meta(space.id,id),stream=meta&&await storage.files.open(space.id,id);if(!stream)return json(res,404,{error:'Dosya bulunamadı.'});const previewType=meta.type||PREVIEW_TYPES[String(meta.name).split('.').pop().toLowerCase()]||'',inline=!!previewType&&url.searchParams.has('inline');res.writeHead(200,{'Content-Type':inline?previewType:'application/octet-stream','Content-Disposition':`${inline?'inline':'attachment'}; filename*=UTF-8''${encodeURIComponent(meta.name)}`,'Content-Length':meta.size,'Cache-Control':'private, max-age=3600'});stream.on('error',()=>res.destroy());return stream.pipe(res);}
  return json(res,404,{error:'Bulunamadı.'});
  }catch(e){json(res,e.status||400,{error:e.message||'İşlem tamamlanamadı.'});}};
 
