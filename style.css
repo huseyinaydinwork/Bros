@@ -1393,3 +1393,78 @@ button.sync{font:inherit;cursor:pointer}
 .sync-card p{margin:0 0 10px;font-size:13px;line-height:1.5;color:var(--text-2)}
 .sync-card-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:10px}
 @media(max-width:760px){.sync-status{grid-template-columns:1fr}.file-sync{margin-left:0}}
+
+/* ───────── Basit tema ─────────
+   Az görenler ve bu tür programlara yeni başlayanlar için: en az 16 px yazı, güçlü kontrast,
+   en az 44 px dokunma alanı, altı çizili bağlantılar, kalın odak çerçevesi, hareket yok.
+   Yalnızca görünümü değiştirir; tüm işlevler aynı yerde durur. */
+:root[data-theme=basit]{--bg:#f4f6f9;--surface:#fff;--surface-2:#f4f6f9;--surface-3:#e8ecf2;--border:#9aa3af;--border-strong:#5b6472;--text:#0a0a0a;--text-2:#1f2733;--text-3:#3d4654;--primary:#0b3d91;--primary-hover:#072a66;--sage-600:#0b3d91;--sage-700:#0b3d91;--sage-100:#dde8fb;--sage-50:#eef4fd;--late:#a3140c;--late-bg:#fde8e6;--warn:#7a4a00;--info:#0b3d91;--brand-800:#0b3d91;
+ --radius:12px;--radius-sm:10px;--shadow:none;--sidebar:288px;--header:76px;
+ --sb-bg:#fff;--sb-bg-2:#e8ecf2;--sb-bg-3:#0b3d91;--sb-border:#9aa3af;--sb-text:#0a0a0a;--sb-muted:#1f2733;--sb-strong:#0a0a0a;--sb-accent:#0b3d91;--header-bg:#fff;--popover:#fff;
+ --flow-link:#9aa3af;--flow-pending:#5b6472;--flow-active:#0b3d91;--flow-done:#0a0a0a;--flow-late:#a3140c}
+:root[data-theme=basit] body{font-size:17px;line-height:1.6;letter-spacing:.005em}
+/* Küçük yazı yok: her metin en az 16 px; başlıklar ve büyük rakamlar kendi boyutunu korur. */
+:root[data-theme=basit] body :not(h1,.page-heading h2,.modal-head h2,.auth-form h2,.plan-status h2,.kpi strong,.agenda-date b,.fin-net strong,.project-summary strong,.metric strong,.workflow-stage strong,.invite-code code,.object-title,.month-board-heading strong,.wl-summary b,.wizard-choice b,.plan-meter b,.plan-price,.tpl-stats b,.bc-pct,.pipe-col b,.pipe-sum b,.progress-compare b,.cal-label,.cal-wcol header b,.font-sample,.notification-count,svg,svg *){font-size:max(1em,16px)!important}
+:root[data-theme=basit] h1{font-size:30px}
+:root[data-theme=basit] :is(h2,h3,h4){font-weight:800;color:var(--text)}
+:root[data-theme=basit] :is(small,.field-hint,.muted){color:var(--text-2)!important}
+/* Hareket ve süs yok */
+:root[data-theme=basit] *,:root[data-theme=basit] *::before,:root[data-theme=basit] *::after{animation:none!important;transition:none!important}
+:root[data-theme=basit] :is(kbd,.kbd,.shortcut,.sb-collapse){display:none!important}
+/* Bağlantılar ve odak */
+:root[data-theme=basit] main a:not([class]){color:var(--primary);text-decoration:underline;text-underline-offset:3px}
+:root[data-theme=basit] :focus-visible{outline:3px solid #f2a900!important;outline-offset:2px!important;box-shadow:0 0 0 6px #0a0a0a!important}
+/* Büyük, belirgin düğmeler */
+:root[data-theme=basit] :is(.primary,.secondary,.danger,.dashed-button){min-height:48px;height:auto;padding:8px 20px;font-weight:700;border-radius:10px}
+:root[data-theme=basit] .primary{background:var(--primary);color:#fff;border:2px solid var(--primary)}
+:root[data-theme=basit] .primary:hover{background:var(--primary-hover)}
+:root[data-theme=basit] .secondary{border:2px solid var(--text);color:var(--text);background:#fff}
+:root[data-theme=basit] .secondary:hover{background:var(--sage-100)}
+:root[data-theme=basit] .danger{border:2px solid var(--late)}
+:root[data-theme=basit] :is(.primary,.secondary,.danger) .icon{width:20px;height:20px}
+:root[data-theme=basit] .icon-button{width:44px;height:44px;color:var(--text);border:2px solid transparent}
+:root[data-theme=basit] .icon-button:hover{border-color:var(--text);background:var(--sage-100)}
+:root[data-theme=basit] .icon-button .icon{width:22px;height:22px}
+:root[data-theme=basit] .icon-button.tiny{width:36px;height:36px}
+:root[data-theme=basit] .bell-button{width:48px;height:48px;border:2px solid var(--text);color:var(--text)}
+:root[data-theme=basit] .bell-button .icon{width:22px;height:22px}
+:root[data-theme=basit] .sync{min-height:44px}
+:root[data-theme=basit] :is(.segmented button,.tabs button,.chip span){min-height:44px;height:auto;padding:6px 16px;color:var(--text);font-weight:700}
+:root[data-theme=basit] .segmented{background:#fff;border:2px solid var(--border-strong);gap:4px}
+:root[data-theme=basit] .segmented button:is(.selected,.on){background:var(--primary);color:#fff;box-shadow:none}
+:root[data-theme=basit] .segmented button:is(.selected,.on) span{color:#fff}
+:root[data-theme=basit] .tabs{border-bottom:2px solid var(--border-strong);gap:6px}
+:root[data-theme=basit] .tabs button{color:var(--text-2)}
+:root[data-theme=basit] .tabs button.selected{color:var(--primary);background:var(--sage-100);border-radius:10px 10px 0 0}
+:root[data-theme=basit] .tabs button.selected::after{height:4px;background:var(--primary);left:0;right:0}
+:root[data-theme=basit] .chip span{border:2px solid var(--border-strong)}
+/* Form alanları */
+:root[data-theme=basit] :is(input:not([type=checkbox]):not([type=radio]):not([type=file]):not(.object-title),select){min-height:50px;height:auto!important;border:2px solid var(--border-strong)!important;border-radius:10px}
+:root[data-theme=basit] textarea{border:2px solid var(--border-strong)!important;border-radius:10px}
+:root[data-theme=basit] :is(input,select,textarea):focus{border-color:var(--primary)!important}
+:root[data-theme=basit] ::placeholder{color:#5b6472;opacity:1}
+:root[data-theme=basit] .field>span{color:var(--text);font-weight:700}
+:root[data-theme=basit] input:is([type=checkbox],[type=radio]){width:24px;height:24px}
+/* Kenar çubuğu: açık zemin, büyük menü, seçili öğe dolu renk */
+:root[data-theme=basit] #sidebar{border-right:2px solid var(--border-strong)}
+:root[data-theme=basit] #sidebar .logo .logo-a{fill:#0a0a0a}:root[data-theme=basit] #sidebar .logo .logo-b{fill:#0b3d91}
+:root[data-theme=basit] .logo .logo-a{fill:#0a0a0a}:root[data-theme=basit] .logo .logo-b{fill:#0b3d91}
+:root[data-theme=basit] #sidebar nav{gap:6px}
+:root[data-theme=basit] .nav-item{height:auto;min-height:52px;font-weight:700;color:var(--text)}
+:root[data-theme=basit] .nav-item .icon{width:24px;height:24px;color:var(--text)}
+:root[data-theme=basit] .nav-item:hover{background:var(--sb-bg-2);outline:2px solid var(--text)}
+:root[data-theme=basit] .nav-item.active,:root[data-theme=basit] .nav-item.active .icon{background:var(--primary);color:#fff}
+:root[data-theme=basit] .ws-mark{color:#fff}
+/* Kartlar ve açılır menüler: net kenarlar */
+:root[data-theme=basit] :is(.card,.kpi,.set-card,.popover,#modal,#drawer.drawer){border:2px solid var(--border)!important;box-shadow:none}
+:root[data-theme=basit] #header{border-bottom:2px solid var(--border-strong);backdrop-filter:none}
+:root[data-theme=basit] .popover-item{min-height:52px;font-weight:600}
+:root[data-theme=basit] .popover-item:hover{background:var(--sage-100);outline:2px solid var(--text)}
+:root[data-theme=basit] .popover-item>.icon{width:22px;height:22px;color:var(--text)}
+:root[data-theme=basit] .toast{background:#0a0a0a;color:#fff;font-weight:600}
+:root[data-theme=basit] ::-webkit-scrollbar{width:16px;height:16px}
+:root[data-theme=basit] ::-webkit-scrollbar-thumb{background:#5b6472;border:3px solid var(--bg);border-radius:8px}
+:root[data-theme=basit] .theme-switch{grid-template-columns:repeat(2,1fr)}
+.theme-switch{grid-template-columns:repeat(2,1fr)}
+.theme-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+.theme-basit .tp-side{background:#fff;border-right:2px solid #5b6472}.theme-basit .tp-main{background:#f4f6f9}.theme-basit .tp-main i{background:#fff;border:2px solid #5b6472}.theme-basit .tp-main i:last-child{background:#0b3d91;border:0}
