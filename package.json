@@ -5,7 +5,7 @@
   "scripts": {
     "start": "node server.cjs",
     "demo": "node demo.cjs",
-    "check": "node --check app.js && node --check admin.js && node --check server.cjs && node --check model.mjs && node --check auth.cjs && node --check access.cjs && node --check mailer.cjs && node --check automations.cjs && node --check calendar.mjs && node --check demo.cjs && node --check landing.js && node --check storage.cjs && node --check scripts/migrate-to-postgres.cjs && node --check scripts/create-admin.cjs",
+    "check": "node --check app.js && node --check admin.js && node --check server.cjs && node --check model.mjs && node --check auth.cjs && node --check access.cjs && node --check mailer.cjs && node --check automations.cjs && node --check calendar.mjs && node --check demo.cjs && node --check landing.js && node --check storage.cjs && node --check scripts/migrate-to-postgres.cjs && node --check scripts/create-admin.cjs && node --check zip.cjs && node --check site.cjs",
     "test": "node --test tests/*.test.mjs"
   },
   "dependencies": {

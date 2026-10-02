@@ -9,6 +9,7 @@ const {levelFor,visibleState,mergeScoped}=require('./access.cjs');
 const {createStorage}=require('./storage.cjs');
 const {migrateLegacy}=require('./auth.cjs');
 const site=require('./site.cjs');
+const {writeZip,safeName}=require('./zip.cjs');
 const ROOT = process.env.BUROS_DATA_DIR || path.join(__dirname, '.buros');
 const PROD=process.env.NODE_ENV==='production';
 // On Fly.io the app name is known, so APP.fly.dev works without extra configuration.
@@ -156,6 +157,15 @@ const handler=async(req,res)=>{try{
  if(kind==='banner'&&(objectId||!IMAGE_TYPES.includes(type)))return json(res,400,{error:'Görsel PNG, JPEG veya WebP olmalı.'});
  const name=String(url.searchParams.get('name')||'dosya').slice(0,200);const bytes=await body(req,(kind==='banner'?8:25)*1024*1024);if(!bytes.length)return json(res,400,{error:'Boş dosya yüklenemez.'});
  const id=crypto.randomUUID();const meta={id,name,size:bytes.length,createdAt:new Date().toISOString(),objectId:objectId||null,projectId:site.id,kind,type:IMAGE_TYPES.includes(type)?type:'',uploadedBy:actor.id};await storage.files.put(space.id,id,bytes,meta);return json(res,201,meta);}
+ // Whole project as a ZIP: Proje / Bölüm / Kayıt / dosya, project files under "Proje dosyaları";
+ // the latest version keeps the plain name, older versions go to "_önceki sürümler".
+ const zipMatch=route.match(/^\/api\/projects\/([\w-]+)\/files\.zip$/);
+ if(zipMatch&&method==='GET'){const p=state?.projects.find(x=>x.id===zipMatch[1]);if(!p||!levelFor(actor,p))return json(res,404,{error:'Proje bulunamadı.'});
+  const groups=[{dir:'Proje dosyaları',files:p.files||[]},...p.sections.flatMap(sec=>sec.items.map(o=>({dir:`${safeName(sec.name)}/${safeName(o.name)}`,files:o.files||[]})))],entries=[];
+  for(const g of groups){const latest=new Map();for(const f of g.files)latest.set(f.name,f);for(const f of g.files){const isLatest=latest.get(f.name)===f,ext=f.name.includes('.')?'.'+f.name.split('.').pop():'',base=ext?f.name.slice(0,-ext.length):f.name;
+   entries.push({path:`${safeName(p.name)}/${g.dir}/${isLatest?safeName(f.name):`_önceki sürümler/${safeName(base)} (v${f.version||1})${safeName(ext)}`}`,date:new Date(f.createdAt||Date.now()),read:async()=>{const st=await storage.files.open(space.id,f.id);if(!st)return null;const chunks=[];for await(const c of st)chunks.push(Buffer.from(c));return Buffer.concat(chunks);}});}}
+  res.writeHead(200,{'Content-Type':'application/zip','Content-Disposition':`attachment; filename*=UTF-8''${encodeURIComponent(safeName(p.name)+'.zip')}`,'Cache-Control':'no-store'});
+  try{await writeZip(res,entries);}catch(e){console.error('zip',e.message);}return res.end();}
  if(route.startsWith('/api/files/')&&method==='GET'){
  const id=route.split('/').pop();if(!/^[a-f0-9-]{36}$/.test(id))return json(res,404,{error:'Dosya bulunamadı.'});if(!levelFor(actor,siteOfFile(state,id)))return json(res,404,{error:'Dosya bulunamadı.'});const meta=await storage.files.meta(space.id,id),stream=meta&&await storage.files.open(space.id,id);if(!stream)return json(res,404,{error:'Dosya bulunamadı.'});const previewType=meta.type||PREVIEW_TYPES[String(meta.name).split('.').pop().toLowerCase()]||'',inline=!!previewType&&url.searchParams.has('inline');res.writeHead(200,{'Content-Type':inline?previewType:'application/octet-stream','Content-Disposition':`${inline?'inline':'attachment'}; filename*=UTF-8''${encodeURIComponent(meta.name)}`,'Content-Length':meta.size,'Cache-Control':'private, max-age=3600'});stream.on('error',()=>res.destroy());return stream.pipe(res);}
  return json(res,404,{error:'Bulunamadı.'});
